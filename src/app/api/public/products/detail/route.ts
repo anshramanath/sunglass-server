@@ -9,22 +9,22 @@ export async function POST(req: NextRequest) {
 
   const supabase = createAdminClient();
 
-  const { data: brand } = await supabase
+  const { data: brand, error: brandError } = await supabase
     .from("brands")
     .select("id")
     .eq("slug", body.brandSlug)
     .single();
 
-  if (!brand) return err("Brand not found", 404);
+  if (brandError || !brand) return err("Brand not found", 404);
 
-  const { data: product, error } = await supabase
+  const { data: product, error: productError } = await supabase
     .from("products")
     .select("*")
     .eq("slug", body.productSlug)
     .eq("brand_id", brand.id)
     .single();
 
-  if (error || !product) return err("Product not found", 404);
+  if (productError || !product) return err("Product not found", 404);
 
   const [
     { data: variations },
@@ -49,11 +49,34 @@ export async function POST(req: NextRequest) {
       .order("sort_order"),
   ]);
 
+  // Fetch variation images and attach to each variation
+  const variationIds = variations?.map((v) => v.id) ?? [];
+  const { data: variationImages } =
+    variationIds.length > 0
+      ? await supabase
+          .from("variation_images")
+          .select("id, variation_id, src, name, sort_order")
+          .in("variation_id", variationIds)
+          .order("sort_order", { ascending: true })
+      : { data: [] };
+
+  type VariationImage = { id: string; variation_id: string; src: string; name: string; sort_order: number };
+  const variationImageMap: Record<string, VariationImage[]> = {};
+  for (const img of variationImages ?? []) {
+    variationImageMap[img.variation_id] = variationImageMap[img.variation_id] ?? [];
+    variationImageMap[img.variation_id]!.push(img);
+  }
+
+  const variationsWithImages = (variations ?? []).map((v) => ({
+    ...v,
+    images: variationImageMap[v.id] ?? [],
+  }));
+
   const categories = productCats?.map((r) => r.categories).filter(Boolean) ?? [];
 
   return ok({
     product,
-    variations: variations ?? [],
+    variations: variationsWithImages,
     categories,
     productImages: productImages ?? [],
     descriptionImages: descriptionImages ?? [],

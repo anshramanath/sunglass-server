@@ -10,19 +10,26 @@ type CategoryNode = {
   children?: CategoryNode[];
 };
 
+function rollupProductCounts(node: CategoryNode): number {
+  const childTotal =
+    node.children?.reduce((sum, child) => sum + rollupProductCounts(child), 0) ?? 0;
+  node.productCount += childTotal;
+  return node.productCount;
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   if (!body?.brandSlug) return err("brandSlug is required");
 
   const supabase = createAdminClient();
 
-  const { data: brand } = await supabase
+  const { data: brand, error: brandError } = await supabase
     .from("brands")
     .select("id")
     .eq("slug", body.brandSlug)
     .single();
 
-  if (!brand) return err("Brand not found", 404);
+  if (brandError || !brand) return err("Brand not found", 404);
 
   const [{ data: categories }, { data: brandProducts }] = await Promise.all([
     supabase
@@ -67,6 +74,10 @@ export async function POST(req: NextRequest) {
     } else {
       roots.push(node);
     }
+  }
+
+  for (const root of roots) {
+    rollupProductCounts(root);
   }
 
   return ok(roots);

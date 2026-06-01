@@ -2,6 +2,23 @@ import { NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ok, err } from "@/lib/api";
 
+type CategoryRow = { id: string; parent_id: string | null };
+
+function getDescendantCategoryIds(rootId: string, categories: CategoryRow[]): string[] {
+  const result = new Set<string>([rootId]);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const cat of categories) {
+      if (cat.parent_id && result.has(cat.parent_id) && !result.has(cat.id)) {
+        result.add(cat.id);
+        changed = true;
+      }
+    }
+  }
+  return Array.from(result);
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   if (!body?.brandSlug) return err("brandSlug is required");
@@ -12,7 +29,7 @@ export async function POST(req: NextRequest) {
     search = "",
     saleOnly = false,
     inStockOnly = false,
-    sort = "featured",
+    sort = "name_asc",
   } = body;
 
   const page = Math.max(1, Number(body.page) || 1);
@@ -20,32 +37,40 @@ export async function POST(req: NextRequest) {
 
   const supabase = createAdminClient();
 
-  const { data: brand } = await supabase
+  const { data: brand, error: brandError } = await supabase
     .from("brands")
     .select("id")
     .eq("slug", brandSlug)
     .single();
 
-  if (!brand) return err("Brand not found", 404);
+  if (brandError || !brand) return err("Brand not found", 404);
 
-  // Resolve category filter to a list of product IDs
+  // Resolve category filter to product IDs, expanding through descendants
   let productIdFilter: string[] | null = null;
   if (categorySlug) {
-    const { data: category } = await supabase
+    const { data: category, error: categoryError } = await supabase
       .from("categories")
       .select("id")
       .eq("slug", categorySlug)
       .eq("brand_id", brand.id)
       .single();
 
-    if (!category) return err("Category not found", 404);
+    if (categoryError || !category) return err("Category not found", 404);
+
+    const { data: allCategories } = await supabase
+      .from("categories")
+      .select("id, parent_id")
+      .eq("brand_id", brand.id);
+
+    const categoryIds = getDescendantCategoryIds(category.id, allCategories ?? []);
 
     const { data: productCats } = await supabase
       .from("product_categories")
       .select("product_id")
-      .eq("category_id", category.id);
+      .in("category_id", categoryIds);
 
-    productIdFilter = productCats?.map((r) => r.product_id) ?? [];
+    const uniqueIds = [...new Set(productCats?.map((r) => r.product_id) ?? [])];
+    productIdFilter = uniqueIds;
 
     if (productIdFilter.length === 0) {
       return ok({ products: [], page, totalPages: 0, totalProducts: 0 });
@@ -60,7 +85,7 @@ export async function POST(req: NextRequest) {
     .eq("brand_id", brand.id);
 
   if (productIdFilter !== null) query = query.in("id", productIdFilter);
-  if (search) query = query.ilike("name", `%${search}%`);
+  if (search) query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%`);
   if (saleOnly) query = query.eq("sale", true);
   if (inStockOnly) query = query.gt("stock", 0);
 
@@ -68,7 +93,10 @@ export async function POST(req: NextRequest) {
     query = query.order("min_price_cents", { ascending: true });
   else if (sort === "price_desc")
     query = query.order("min_price_cents", { ascending: false });
-  else query = query.order("name", { ascending: true });
+  else if (sort === "name_desc")
+    query = query.order("name", { ascending: false });
+  else
+    query = query.order("name", { ascending: true });
 
   const offset = (page - 1) * limit;
   query = query.range(offset, offset + limit - 1);

@@ -9,22 +9,22 @@ export async function POST(req: NextRequest) {
 
   const supabase = createAdminClient();
 
-  const { data: brand } = await supabase
+  const { data: brand, error: brandError } = await supabase
     .from("brands")
     .select("id")
     .eq("slug", body.brandSlug)
     .single();
 
-  if (!brand) return err("Brand not found", 404);
+  if (brandError || !brand) return err("Brand not found", 404);
 
-  const { data: category } = await supabase
+  const { data: category, error: categoryError } = await supabase
     .from("categories")
     .select("id, name, slug, parent_id")
     .eq("slug", body.categorySlug)
     .eq("brand_id", brand.id)
     .single();
 
-  if (!category) return err("Category not found", 404);
+  if (categoryError || !category) return err("Category not found", 404);
 
   const [{ data: parent }, { data: children }, { data: productCats }] =
     await Promise.all([
