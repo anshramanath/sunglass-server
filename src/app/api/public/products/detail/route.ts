@@ -63,12 +63,24 @@ export async function POST(req: NextRequest) {
           .order("sort_order", { ascending: true })
       : { data: [] };
 
+  type VarImage = { id: string; variation_id: string; src: string; name: string; sort_order: number };
+  const typedVariationImages = (variationImages ?? []) as VarImage[];
+  const imagesByVariationId: Record<string, VarImage[]> = {};
+  for (const image of typedVariationImages) {
+    imagesByVariationId[image.variation_id] ??= [];
+    imagesByVariationId[image.variation_id].push(image);
+  }
+
+  const variationsWithImages = (variations ?? []).map((v) => ({
+    ...v,
+    images: imagesByVariationId[v.id] ?? [],
+  }));
+
   const categories = productCats?.map((r) => r.categories).filter(Boolean) ?? [];
 
   return ok({
     product,
-    variations: variations ?? [],
-    variationImages: variationImages ?? [],
+    variations: variationsWithImages,
     categories,
     productImages: productImages ?? [],
     descriptionImages: descriptionImages ?? [],
