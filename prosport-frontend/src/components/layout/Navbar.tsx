@@ -9,7 +9,7 @@ export default async function Navbar() {
     <header className="border-b">
       <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
         <Link href="/" className="font-semibold text-lg">
-          proSPORT
+          proSPORT Sunglasses
         </Link>
         <NavMenu categories={categories} />
       </div>

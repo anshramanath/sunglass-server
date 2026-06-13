@@ -6,7 +6,6 @@ import {
   NavigationMenu,
   NavigationMenuContent,
   NavigationMenuItem,
-  NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
@@ -24,14 +23,12 @@ export default function NavMenu({ categories }: { categories: CategoryNode[] }) 
                 <ul className="flex flex-col w-40 p-1">
                   {cat.children.map((child) => (
                     <li key={child.id}>
-                      <NavigationMenuLink asChild>
-                        <Link
-                          href={`/category/${cat.slug}/${child.slug}`}
-                          className="block px-3 py-2 text-sm rounded-md hover:bg-muted"
-                        >
-                          {child.name}
-                        </Link>
-                      </NavigationMenuLink>
+                      <Link
+                        href={`/category/${cat.slug}/${child.slug}`}
+                        className="block px-3 py-2 text-sm rounded-md hover:bg-muted"
+                      >
+                        {child.name}
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -39,11 +36,9 @@ export default function NavMenu({ categories }: { categories: CategoryNode[] }) 
             </NavigationMenuItem>
           ) : (
             <NavigationMenuItem key={cat.id}>
-              <NavigationMenuLink asChild>
-                <Link href={`/category/${cat.slug}`} className={navigationMenuTriggerStyle()}>
-                  {cat.name}
-                </Link>
-              </NavigationMenuLink>
+              <Link href={`/category/${cat.slug}`} className={navigationMenuTriggerStyle()}>
+                {cat.name}
+              </Link>
             </NavigationMenuItem>
           )
         )}

@@ -19,7 +19,7 @@ export default function ProductCard({ product }: Props) {
       : `${formatPrice(product.minPriceCents)} – ${formatPrice(product.maxPriceCents)}`;
 
   return (
-    <Link href={`/product/${product.id}`}>
+    <Link href={`/product/${product.slug}`}>
       <Card className="overflow-hidden hover:shadow-md transition-shadow">
         <div className="aspect-square relative bg-muted">
           {thumbnail ? (

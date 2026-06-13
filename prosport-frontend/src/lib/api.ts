@@ -1,7 +1,7 @@
 import type { ApiResponse, CategoryNode, ProductDetail, ProductsResponse } from "./types";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://sunglass-monster-server.vercel.app";
-export const BRAND_SLUG = process.env.NEXT_PUBLIC_BRAND_SLUG ?? "prosport-sunglasses";
+const BASE_URL = "https://sunglass-monster-server.vercel.app";
+export const BRAND_SLUG = "bikershades";
 
 async function apiFetch<T>(path: string, params: Record<string, string | number>): Promise<T> {
   const url = new URL(`${BASE_URL}${path}`);
@@ -33,6 +33,6 @@ export function getProducts(params: {
   });
 }
 
-export function getItem(productId: string, brandSlug: string): Promise<ProductDetail> {
-  return apiFetch("/api/public/item", { productId, brandSlug });
+export function getItem(slug: string, brandSlug: string): Promise<ProductDetail> {
+  return apiFetch("/api/public/item", { slug, brandSlug });
 }

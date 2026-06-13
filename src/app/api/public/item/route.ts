@@ -3,9 +3,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { ok, err } from "@/lib/api";
 
 export async function GET(req: NextRequest) {
-  const productId = req.nextUrl.searchParams.get("productId");
+  const slug = req.nextUrl.searchParams.get("slug");
   const brandSlug = req.nextUrl.searchParams.get("brandSlug");
-  if (!productId) return err("Product id is required!", 400);
+  if (!slug) return err("Product slug is required!", 400);
   if (!brandSlug) return err("Brand slug is required!", 400);
 
   const supabase = createAdminClient();
@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
         description_images(src, name)
       )
     `)
-    .eq("id", productId)
+    .eq("slug", slug)
     .eq("brand_id", brand.id)
     .single();
 
