@@ -6,8 +6,9 @@ export async function GET(req: NextRequest) {
   const params = req.nextUrl.searchParams;
   const brandSlug = params.get("brandSlug");
   const categoryId = params.get("categoryId");
+  const saleOnly = params.get("sale") === "true";
   if (!brandSlug) return err("Brand slug is required!", 400);
-  if (!categoryId) return err("Category id is required!", 400);
+  if (!categoryId && !saleOnly) return err("Category id is required!", 400);
 
   const page = Math.max(1, Number(params.get("page")) || 1);
   const size = Math.min(100, Math.max(1, Number(params.get("size")) || 24));
@@ -24,14 +25,28 @@ export async function GET(req: NextRequest) {
 
   const from = (page - 1) * size;
   const to = from + size - 1;
-  const { data: products, count: total, error } = await supabase
-    .from("products")
-    .select("id, name, slug, attributes, featured, sale, min_price_cents, max_price_cents, sale_price_cents, product_categories!inner(category_id), product_images!inner(src, name)", { count: "exact" })
-    .eq("brand_id", brand.id)
-    .eq("product_categories.category_id", categoryId)
-    .eq("in_stock", true)
-    .order("name", { ascending: true })
-    .range(from, to);
+
+  let products, total, error;
+
+  if (categoryId) {
+    ({ data: products, count: total, error } = await supabase
+      .from("products")
+      .select("id, name, slug, attributes, featured, sale, min_price_cents, max_price_cents, sale_price_cents, product_categories!inner(category_id), product_images!inner(src, name)", { count: "exact" })
+      .eq("brand_id", brand.id)
+      .eq("product_categories.category_id", categoryId)
+      .eq("in_stock", true)
+      .order("name", { ascending: true })
+      .range(from, to));
+  } else {
+    ({ data: products, count: total, error } = await supabase
+      .from("products")
+      .select("id, name, slug, attributes, featured, sale, min_price_cents, max_price_cents, sale_price_cents, product_images!inner(src, name)", { count: "exact" })
+      .eq("brand_id", brand.id)
+      .eq("sale", true)
+      .eq("in_stock", true)
+      .order("name", { ascending: true })
+      .range(from, to));
+  }
 
   if (error) return err("Failed to fetch products!", 500);
 

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>proSPORT Sunglasses</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    // Tailwind config — derived from the Aritzia token set (exact values),
+    // re-themed for proSPORT. Monochrome + cool-grey ladder, px type scale,
+    // radius-0, hairlines. Brand colour lives in the logo only. No custom CSS.
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Hanken Grotesk"', 'Helvetica Neue', 'Arial', 'sans-serif'] },
+          colors: {
+            ink: '#000000',
+            paper: '#FFFFFF',
+            brand: '#2EA3DC',
+            sale: '#2EA3DC',
+            grey: {
+              950: '#141414', 800: '#333333', 700: '#4A4A4A', 600: '#5E5E5E',
+              500: '#6E6E6E', 400: '#8C8C8C', 300: '#C9C9C9', 250: '#D6D6D6',
+              200: '#E2E2E2', 150: '#E9E9E9', 100: '#ECECEC', 75: '#F2F2F2', 50: '#F6F6F6'
+            }
+          },
+          fontSize: {
+            '2xs': ['11px', '1.4'], 'xs': ['12px', '1.4'], 'sm': ['13px', '1.4'],
+            'base': ['15px', '1.55'], 'md': ['16px', '1.55'], 'lg': ['18px', '1.5'],
+            'xl': ['21px', '1.3'], '2xl': ['26px', '1.2'], '3xl': ['34px', '1.15'],
+            '4xl': ['44px', '1.08'], '5xl': ['56px', '1.05'], '6xl': ['68px', '1.03']
+          },
+          letterSpacing: { tightish: '-0.01em', wide: '0.04em', wider: '0.10em' },
+          maxWidth: { shell: '1680px' },
+          boxShadow: { pop: '0 8px 30px rgba(0,0,0,0.12)' },
+          transitionTimingFunction: { standard: 'cubic-bezier(0.4,0,0.2,1)' }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="font-sans bg-paper text-ink antialiased">
+
+  <!-- ============ HEADER ============ -->
+  <!-- shared dimmer for the slide-in panels -->
+  <div id="panelBackdrop" onclick="closePanels()" class="fixed inset-0 z-[45] bg-black/30 opacity-0 invisible transition-opacity duration-200"></div>
+
+  <!-- ============ NAVBAR — single compact row: logo · links · search · icons ============ -->
+  <header class="sticky top-0 z-40 bg-paper border-b border-grey-200">
+    <div class="mx-auto max-w-shell px-5 lg:px-10">
+      <div class="h-16 flex items-center gap-6 xl:gap-9">
+        <!-- logo -->
+        <a href="index.html" class="shrink-0" aria-label="proSPORT home">
+          <img src="assets/prosport-logo.png" alt="proSPORT" class="h-7 w-auto">
+        </a>
+        <!-- category links -->
+        <ul class="hidden lg:flex items-center gap-6 xl:gap-7">
+
+        <li class="group relative h-16 flex items-center">
+          <a href="#" class="block py-1 whitespace-nowrap text-base font-medium hover:underline underline-offset-[6px] decoration-1 decoration-ink">Brands</a>
+          <div class="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-opacity duration-200 absolute left-0 top-full z-50 bg-paper border border-grey-150 shadow-pop">
+            <div class="px-9 py-8 min-w-[200px]">
+              <ul class="space-y-4 text-md text-grey-600">
+                <li>
+                  <p class="text-ink font-medium">BikerArmour</p>
+                  <ul class="mt-4 space-y-4 pl-4">
+                    <li><a href="#" class="hover:text-ink transition-colors duration-200">Foam Goggles</a></li>
+                    <li><a href="#" class="hover:text-ink transition-colors duration-200">Cover Overs</a></li>
+                    <li><a href="#" class="hover:text-ink transition-colors duration-200">Photochromic</a></li>
+                    <li><a href="#" class="hover:text-ink transition-colors duration-200">Combos</a></li>
+                  </ul>
+                </li>
+                <li><a href="#" class="hover:text-ink transition-colors duration-200">Wiley X</a></li>
+                <li><a href="#" class="hover:text-ink transition-colors duration-200">7Eye</a></li>
+              </ul>
+            </div>
+          </div>
+        </li>
+
+        <li class="group relative h-16 flex items-center">
+          <a href="category.html" class="block py-1 whitespace-nowrap text-base font-medium hover:underline underline-offset-[6px] decoration-1 decoration-ink">Sunglasses</a>
+          <div class="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-opacity duration-200 absolute left-0 top-full z-50 bg-paper border border-grey-150 shadow-pop">
+            <div class="px-9 py-8 min-w-[180px]">
+              <ul class="space-y-4 text-md text-grey-600">
+              <li><a href="category.html" class="hover:text-ink transition-colors duration-200">Sport</a></li>
+              <li><a href="#" class="hover:text-ink transition-colors duration-200">Polarized</a></li>
+              <li><a href="#" class="hover:text-ink transition-colors duration-200">HD Lens</a></li>
+              <li><a href="#" class="hover:text-ink transition-colors duration-200">Night</a></li>
+              </ul>
+            </div>
+          </div>
+        </li>
+
+        <li class="group relative h-16 flex items-center">
+          <a href="#" class="block py-1 whitespace-nowrap text-base font-medium hover:underline underline-offset-[6px] decoration-1 decoration-ink">Bifocals</a>
+          <div class="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-opacity duration-200 absolute left-0 top-full z-50 bg-paper border border-grey-150 shadow-pop">
+            <div class="px-9 py-8 min-w-[180px]">
+              <ul class="space-y-4 text-md text-grey-600">
+              <li><a href="#" class="hover:text-ink transition-colors duration-200">Standard</a></li>
+              <li><a href="#" class="hover:text-ink transition-colors duration-200">Polarized</a></li>
+              <li><a href="#" class="hover:text-ink transition-colors duration-200">Foam</a></li>
+              </ul>
+            </div>
+          </div>
+        </li>
+
+        <li class="group relative h-16 flex items-center">
+          <a href="#" class="block py-1 whitespace-nowrap text-base font-medium hover:underline underline-offset-[6px] decoration-1 decoration-ink">Readers</a>
+          <div class="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-opacity duration-200 absolute left-0 top-full z-50 bg-paper border border-grey-150 shadow-pop">
+            <div class="px-9 py-8 min-w-[180px]">
+              <ul class="space-y-4 text-md text-grey-600">
+              <li><a href="#" class="hover:text-ink transition-colors duration-200">Sunglass</a></li>
+              <li><a href="#" class="hover:text-ink transition-colors duration-200">Clear</a></li>
+              <li><a href="#" class="hover:text-ink transition-colors duration-200">Computer</a></li>
+              <li><a href="#" class="hover:text-ink transition-colors duration-200">Multifocal</a></li>
+              </ul>
+            </div>
+          </div>
+        </li>
+
+        <li class="h-16 flex items-center">
+          <a href="#" class="block py-1 whitespace-nowrap text-base font-medium hover:underline underline-offset-[6px] decoration-1 decoration-ink">Cases & Accessories</a>
+        </li>
+
+        <li class="h-16 flex items-center">
+          <a href="#" class="block py-1 whitespace-nowrap text-base font-medium text-sale hover:underline underline-offset-[6px] decoration-1 decoration-sale">Sale</a>
+        </li>
+      </ul>
+
+        <!-- search + utility icons (pushed right) -->
+        <div class="ml-auto flex items-center gap-4 sm:gap-5">
+          <!-- inline search box (xl+) -->
+          <button type="button" onclick="openPanel('searchPanel')" class="hidden xl:flex items-center gap-2.5 border border-grey-300 hover:border-ink transition-colors duration-200 h-9 px-3.5 w-56 text-left" aria-label="Search">
+            <svg class="w-[18px] h-[18px] text-grey-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <span class="text-base text-grey-400">Search</span>
+          </button>
+          <!-- search icon (below xl) -->
+          <button type="button" onclick="openPanel('searchPanel')" class="xl:hidden grid place-items-center hover:opacity-60 transition-opacity duration-200" aria-label="Search">
+            <svg class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          </button>
+          <!-- Bookmark -->
+          <button type="button" onclick="openPanel('savedPanel')" class="grid place-items-center hover:opacity-60 transition-opacity duration-200" aria-label="Saved">
+            <svg class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          </button>
+          <!-- Bag -->
+          <button type="button" onclick="openPanel('bagPanel')" class="grid place-items-center hover:opacity-60 transition-opacity duration-200" aria-label="Bag">
+            <svg class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          </button>
+          <!-- Sign in -->
+          <a href="signin.html" class="hidden sm:inline whitespace-nowrap text-base hover:opacity-60 transition-opacity duration-200">Sign In</a>
+          <!-- Mobile menu -->
+          <button class="lg:hidden grid place-items-center hover:opacity-60 transition-opacity duration-200" aria-label="Menu">
+            <svg class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+    <!-- ============ SEARCH PANEL ============ -->
+    <div id="searchPanel" data-panel class="fixed top-0 z-50 h-full w-[480px] max-w-full bg-paper right-[-480px] transition-[right] duration-[320ms] ease-standard flex flex-col">
+      <div class="flex items-center gap-4 px-8 pt-8">
+        <div class="flex items-center gap-3 flex-1 border-b border-ink pb-3">
+          <svg class="w-5 h-5 text-ink shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" placeholder="Search" class="bg-transparent text-lg tracking-wide uppercase placeholder-grey-400 outline-none w-full">
+        </div>
+        <button type="button" onclick="closePanels()" class="grid place-items-center w-10 h-10 -mr-2 hover:opacity-60 transition-opacity duration-200" aria-label="Close search">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="px-8 py-9 overflow-y-auto">
+        <p class="text-sm uppercase tracking-wider text-grey-400 font-medium mb-6">Picked Just For You</p>
+        <div class="grid grid-cols-2 gap-x-4 gap-y-7">
+          <a href="product.html" class="group/p block">
+            <div class="bg-grey-100 aspect-square overflow-hidden"><img src="https://zgcekcoatiskqbdruadg.supabase.co/storage/v1/object/public/bikershades/2022_05_Airspeed-Black-Front.jpg" alt="Airspeed" class="w-full h-full object-cover mix-blend-multiply group-hover/p:opacity-80 transition-opacity duration-200"></div>
+            <p class="mt-2 text-base">Airspeed</p>
+            <p class="text-base text-grey-600">$17.99</p>
+          </a>
+          <a href="#" class="group/p block">
+            <div class="bg-grey-100 aspect-square overflow-hidden"><img src="https://zgcekcoatiskqbdruadg.supabase.co/storage/v1/object/public/bikershades/2024_05_Atlas-Black-Front.jpg" alt="Atlas" class="w-full h-full object-cover mix-blend-multiply group-hover/p:opacity-80 transition-opacity duration-200"></div>
+            <p class="mt-2 text-base">Atlas</p>
+            <p class="text-base text-grey-600">$17.99</p>
+          </a>
+          <a href="#" class="group/p block">
+            <div class="bg-grey-100 aspect-square overflow-hidden"><img src="https://zgcekcoatiskqbdruadg.supabase.co/storage/v1/object/public/bikershades/2024_05_Backspin-Glossy-Black-Green-Smoke-Front.jpg" alt="Backspin" class="w-full h-full object-cover mix-blend-multiply group-hover/p:opacity-80 transition-opacity duration-200"></div>
+            <p class="mt-2 text-base">Backspin</p>
+            <p class="text-base text-grey-600">$19.99</p>
+          </a>
+          <a href="#" class="group/p block">
+            <div class="bg-grey-100 aspect-square overflow-hidden"><img src="https://zgcekcoatiskqbdruadg.supabase.co/storage/v1/object/public/bikershades/2022_05_Horizon-Black-Front.jpg" alt="Horizon" class="w-full h-full object-cover mix-blend-multiply group-hover/p:opacity-80 transition-opacity duration-200"></div>
+            <p class="mt-2 text-base">Horizon</p>
+            <p class="text-base text-grey-600">$17.99</p>
+          </a>
+          <a href="#" class="group/p block">
+            <div class="bg-grey-100 aspect-square overflow-hidden"><img src="https://zgcekcoatiskqbdruadg.supabase.co/storage/v1/object/public/bikershades/2022_05_Jupiter-Black-Smoke-Front.jpg" alt="Jupiter" class="w-full h-full object-cover mix-blend-multiply group-hover/p:opacity-80 transition-opacity duration-200"></div>
+            <p class="mt-2 text-base">Jupiter</p>
+            <p class="text-base text-grey-600">$18.99</p>
+          </a>
+          <a href="#" class="group/p block">
+            <div class="bg-grey-100 aspect-square overflow-hidden"><img src="https://zgcekcoatiskqbdruadg.supabase.co/storage/v1/object/public/bikershades/2024_05_Hemi-Black-Front.jpg" alt="Hemi" class="w-full h-full object-cover mix-blend-multiply group-hover/p:opacity-80 transition-opacity duration-200"></div>
+            <p class="mt-2 text-base">Hemi</p>
+            <p class="text-base text-grey-600">$17.99</p>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SAVED PANEL ============ -->
+    <div id="savedPanel" data-panel class="fixed top-0 z-50 h-full w-[480px] max-w-full bg-paper right-[-480px] transition-[right] duration-[320ms] ease-standard flex flex-col">
+      <div class="flex items-center justify-between px-8 pt-7 pb-5 border-b border-grey-200">
+        <h2 class="text-xl font-normal whitespace-nowrap">Saved <span class="text-grey-400">(3)</span></h2>
+        <button type="button" onclick="closePanels()" class="grid place-items-center w-10 h-10 -mr-2 hover:opacity-60 transition-opacity duration-200" aria-label="Close saved">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="px-8 py-8 flex-1 overflow-y-auto">
+        <div class="space-y-7">
+          <div class="flex gap-4">
+            <a href="product.html" class="block w-24 shrink-0 bg-grey-100 aspect-[4/5] overflow-hidden flex items-center justify-center p-2">
+              <img src="https://zgcekcoatiskqbdruadg.supabase.co/storage/v1/object/public/bikershades/2022_05_Airspeed-Black-Front.jpg" alt="Airspeed" class="w-full h-full object-contain mix-blend-multiply">
+            </a>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-start justify-between gap-3">
+                <a href="product.html" class="text-base">Airspeed</a>
+                <button type="button" onclick="removeLineItem(this)" class="shrink-0 text-sm text-grey-400 hover:text-ink transition-colors duration-200" aria-label="Remove Airspeed">
+                  Remove
+                </button>
+              </div>
+              <p class="text-base text-grey-600 mt-1">$17.99</p>
+              <button type="button" class="mt-3 text-sm underline underline-offset-4 hover:opacity-60 transition-opacity duration-200">Add to Bag</button>
+            </div>
+          </div>
+          <div class="flex gap-4">
+            <a href="product.html" class="block w-24 shrink-0 bg-grey-100 aspect-[4/5] overflow-hidden flex items-center justify-center p-2">
+              <img src="https://zgcekcoatiskqbdruadg.supabase.co/storage/v1/object/public/bikershades/2024_05_Atlas-Black-Front.jpg" alt="Atlas" class="w-full h-full object-contain mix-blend-multiply">
+            </a>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-start justify-between gap-3">
+                <a href="product.html" class="text-base">Atlas</a>
+                <button type="button" onclick="removeLineItem(this)" class="shrink-0 text-sm text-grey-400 hover:text-ink transition-colors duration-200" aria-label="Remove Atlas">
+                  Remove
+                </button>
+              </div>
+              <p class="text-base text-grey-600 mt-1">$17.99</p>
+              <button type="button" class="mt-3 text-sm underline underline-offset-4 hover:opacity-60 transition-opacity duration-200">Add to Bag</button>
+            </div>
+          </div>
+          <div class="flex gap-4">
+            <a href="product.html" class="block w-24 shrink-0 bg-grey-100 aspect-[4/5] overflow-hidden flex items-center justify-center p-2">
+              <img src="https://zgcekcoatiskqbdruadg.supabase.co/storage/v1/object/public/bikershades/2024_05_Backspin-Glossy-Black-Green-Smoke-Front.jpg" alt="Backspin" class="w-full h-full object-contain mix-blend-multiply">
+            </a>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-start justify-between gap-3">
+                <a href="product.html" class="text-base">Backspin</a>
+                <button type="button" onclick="removeLineItem(this)" class="shrink-0 text-sm text-grey-400 hover:text-ink transition-colors duration-200" aria-label="Remove Backspin">
+                  Remove
+                </button>
+              </div>
+              <p class="text-base text-grey-600 mt-1">$19.99</p>
+              <button type="button" class="mt-3 text-sm underline underline-offset-4 hover:opacity-60 transition-opacity duration-200">Add to Bag</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ BAG PANEL ============ -->
+    <div id="bagPanel" data-panel class="fixed top-0 z-50 h-full w-[480px] max-w-full bg-paper right-[-480px] transition-[right] duration-[320ms] ease-standard flex flex-col">
+      <div class="flex items-center justify-between px-8 pt-7 pb-5 border-b border-grey-200">
+        <h2 class="text-xl font-normal whitespace-nowrap">My Bag <span class="text-grey-400">(2)</span></h2>
+        <button type="button" onclick="closePanels()" class="grid place-items-center w-10 h-10 -mr-2 hover:opacity-60 transition-opacity duration-200" aria-label="Close bag">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto px-8 py-7">
+        <div class="space-y-7">
+          <div class="flex gap-4">
+            <a href="product.html" class="block w-24 shrink-0 bg-grey-100 aspect-[4/5] overflow-hidden flex items-center justify-center p-2">
+              <img src="https://zgcekcoatiskqbdruadg.supabase.co/storage/v1/object/public/bikershades/2022_05_Airspeed-Black-Front.jpg" alt="Airspeed" class="w-full h-full object-contain mix-blend-multiply">
+            </a>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-start justify-between gap-3">
+                <a href="product.html" class="text-base">Airspeed</a>
+                <button type="button" onclick="removeLineItem(this)" class="shrink-0 text-sm text-grey-400 hover:text-ink transition-colors duration-200" aria-label="Remove Airspeed">Remove</button>
+              </div>
+              <p class="text-sm text-grey-500 mt-0.5">Gunmetal HD</p>
+              <div class="flex items-center justify-between mt-3">
+                <div class="inline-flex items-center border border-grey-300">
+                  <button type="button" class="w-8 h-8 grid place-items-center hover:bg-grey-100 transition-colors duration-200" aria-label="Decrease quantity">&minus;</button>
+                  <span class="w-8 text-center text-base">1</span>
+                  <button type="button" class="w-8 h-8 grid place-items-center hover:bg-grey-100 transition-colors duration-200" aria-label="Increase quantity">+</button>
+                </div>
+                <p class="text-base">$17.99</p>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-4">
+            <a href="product.html" class="block w-24 shrink-0 bg-grey-100 aspect-[4/5] overflow-hidden flex items-center justify-center p-2">
+              <img src="https://zgcekcoatiskqbdruadg.supabase.co/storage/v1/object/public/bikershades/2022_09_Convair-Gunmetal-Smoke-Front.jpg" alt="Convair" class="w-full h-full object-contain mix-blend-multiply">
+            </a>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-start justify-between gap-3">
+                <a href="product.html" class="text-base">Convair</a>
+                <button type="button" onclick="removeLineItem(this)" class="shrink-0 text-sm text-grey-400 hover:text-ink transition-colors duration-200" aria-label="Remove Convair">Remove</button>
+              </div>
+              <p class="text-sm text-grey-500 mt-0.5">Gunmetal Smoke</p>
+              <div class="flex items-center justify-between mt-3">
+                <div class="inline-flex items-center border border-grey-300">
+                  <button type="button" class="w-8 h-8 grid place-items-center hover:bg-grey-100 transition-colors duration-200" aria-label="Decrease quantity">&minus;</button>
+                  <span class="w-8 text-center text-base">1</span>
+                  <button type="button" class="w-8 h-8 grid place-items-center hover:bg-grey-100 transition-colors duration-200" aria-label="Increase quantity">+</button>
+                </div>
+                <p class="text-base">$19.99</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="border-t border-grey-200 px-8 py-6">
+        <div class="flex items-center justify-between text-base">
+          <span class="text-grey-600">Subtotal</span>
+          <span>$37.98</span>
+        </div>
+        <p class="text-sm text-grey-500 mt-1">Shipping &amp; taxes calculated at checkout.</p>
+        <a href="checkout.html" class="block w-full bg-ink text-paper text-base text-center py-4 mt-5 hover:bg-grey-800 transition-colors duration-200">Checkout</a>
+      </div>
+    </div>
+
+  <!-- ============ HERO ============ -->
+  <main>
+    <section class="grid lg:grid-cols-2">
+      <div class="bg-grey-50 flex items-center px-6 sm:px-12 lg:px-16 py-20 lg:py-0 lg:min-h-[80vh] order-2 lg:order-1">
+        <div class="max-w-md">
+          <p class="text-sm uppercase tracking-wider text-grey-400 font-medium">The Open-Road Collection</p>
+          <h1 class="text-5xl lg:text-6xl font-normal tracking-tightish leading-[1.03] mt-5">Cut the glare.<br>Keep the road.</h1>
+          <p class="text-md text-grey-600 leading-relaxed mt-6">Polarized, impact-tested eyewear built for speed, sun and the long way home.</p>
+          <div class="flex items-center gap-6 mt-9">
+            <a href="category.html" class="bg-ink text-paper text-base px-7 py-3.5 hover:bg-grey-800 transition-colors duration-200">Shop Sunglasses</a>
+            <a href="#" class="text-base underline underline-offset-4 hover:opacity-60 transition-opacity duration-200">Shop Sale</a>
+          </div>
+        </div>
+      </div>
+      <div class="bg-grey-100 relative overflow-hidden lg:min-h-[80vh] order-1 lg:order-2 flex items-center justify-center p-10 sm:p-16">
+        <img src="assets/hero-goggle.jpg" alt="proSPORT riding eyewear" class="w-full h-full max-h-[60vh] object-contain mix-blend-multiply">
+        <span class="absolute bottom-6 right-6 text-sm uppercase tracking-wider text-grey-500">Cover-Over Smoke</span>
+      </div>
+    </section>
+
+    <!-- ============ SHOP BY CATEGORY ============ -->
+    <section class="mx-auto max-w-shell px-5 lg:px-10 py-16 lg:py-24">
+      <div class="flex items-end justify-between mb-9">
+        <h2 class="text-2xl lg:text-3xl font-normal">Shop by category</h2>
+        <a href="category.html" class="hidden sm:inline text-base underline underline-offset-4 hover:opacity-60 transition-opacity duration-200">View all</a>
+      </div>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <a href="category.html" class="group block">
+          <div class="bg-grey-100 aspect-[4/5] overflow-hidden flex items-center justify-center p-6"><img src="https://zgcekcoatiskqbdruadg.supabase.co/storage/v1/object/public/bikershades/2022_05_Airspeed-Black-Angle.jpg" alt="Sport" class="w-full h-full object-contain mix-blend-multiply transition-transform duration-[420ms] ease-standard group-hover:scale-[1.04]"></div>
+          <p class="text-base mt-3">Sport</p>
+        </a>
+        <a href="#" class="group block">
+          <div class="bg-grey-100 aspect-[4/5] overflow-hidden flex items-center justify-center p-6"><img src="https://zgcekcoatiskqbdruadg.supabase.co/storage/v1/object/public/bikershades/2018_08_Aruba-PL-Black-Smoke-Angle.jpg" alt="Polarized" class="w-full h-full object-contain mix-blend-multiply transition-transform duration-[420ms] ease-standard group-hover:scale-[1.04]"></div>
+          <p class="text-base mt-3">Polarized</p>
+        </a>
+        <a href="#" class="group block">
+          <div class="bg-grey-100 aspect-[4/5] overflow-hidden flex items-center justify-center p-6"><img src="https://zgcekcoatiskqbdruadg.supabase.co/storage/v1/object/public/bikershades/2024_05_Atlas-Black-Angle.jpg" alt="HD Lens" class="w-full h-full object-contain mix-blend-multiply transition-transform duration-[420ms] ease-standard group-hover:scale-[1.04]"></div>
+          <p class="text-base mt-3">HD Lens</p>
+        </a>
+        <a href="#" class="group block">
+          <div class="bg-grey-100 aspect-[4/5] overflow-hidden flex items-center justify-center p-6"><img src="assets/goggle-yellow.jpg" alt="Night" class="w-full h-full object-contain mix-blend-multiply transition-transform duration-[420ms] ease-standard group-hover:scale-[1.04]"></div>
+          <p class="text-base mt-3">Night</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- ============ BEST SELLERS GRID ============ -->
+    <section class="mx-auto max-w-shell px-5 lg:px-10 pb-16 lg:pb-24">
+      <div class="flex items-end justify-between mb-9">
+        <div>
+          <p class="text-sm uppercase tracking-wider text-grey-400 font-medium">Trending Near You</p>
+          <h2 class="text-2xl lg:text-3xl font-normal mt-2">Best sellers</h2>
+        </div>
+        <a href="category.html" class="hidden sm:inline text-base underline underline-offset-4 hover:opacity-60 transition-opacity duration-200">Shop all sunglasses</a>
+      </div>
+      <!-- swatch colour safelist (keeps the JIT honest for JS-injected chips) -->
+      <div class="hidden bg-[#4b5157] bg-[#c5cad0] bg-[#cfd3d7] bg-[#c2a04e] bg-[#8a5a2b] bg-[#6a4326] bg-[#f0f0f0] bg-[#8c8c8c] bg-[#d6a3ac] bg-[#6a5a86] bg-[#3a5d8f] bg-[#3f6b4f] bg-[#d8c24a] bg-[#e6e6e6] bg-[#6b4a2f] bg-[#565a5e] bg-[#1f1f1f] bg-[#0e0e0e] bg-[#15181c] bg-[#9aa0a6] bg-[#9a5b33] bg-[#c2702e] bg-[#b06a2c] bg-[#b23b30] w-1/2 w-full h-full overflow-hidden inline-flex"></div>
+      <div id="bestGrid" class="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-10"></div>
+    </section>
+
+    <!-- ============ EDITORIAL SPLIT ============ -->
+    <section class="grid sm:grid-cols-2">
+      <a href="#" class="group relative bg-grey-100 min-h-[58vh] overflow-hidden flex items-center justify-center p-12">
+        <img src="assets/goggle-smoke.jpg" alt="" class="w-full h-full object-contain mix-blend-multiply transition-transform duration-[600ms] ease-standard group-hover:scale-[1.05]">
+        <div class="absolute bottom-9 left-9">
+          <p class="text-sm uppercase tracking-wider text-grey-500">Polarized</p>
+          <p class="text-3xl font-normal mt-2">See more, squint less</p>
+          <span class="inline-block mt-4 text-base underline underline-offset-4 group-hover:opacity-60 transition-opacity duration-200">Shop now</span>
+        </div>
+      </a>
+      <a href="#" class="group relative bg-grey-50 min-h-[58vh] overflow-hidden flex items-center justify-center p-12">
+        <img src="assets/goggle-yellow.jpg" alt="" class="w-full h-full object-contain mix-blend-multiply transition-transform duration-[600ms] ease-standard group-hover:scale-[1.05]">
+        <div class="absolute bottom-9 left-9">
+          <p class="text-sm uppercase tracking-wider text-grey-500">Night &amp; HD Lens</p>
+          <p class="text-3xl font-normal mt-2">Colour, contrast, clarity</p>
+          <span class="inline-block mt-4 text-base underline underline-offset-4 group-hover:opacity-60 transition-opacity duration-200">Shop now</span>
+        </div>
+      </a>
+    </section>
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="bg-grey-50 border-t border-grey-200">
+    <div class="mx-auto max-w-shell px-5 lg:px-10 py-8 flex flex-col md:flex-row items-center justify-between gap-6">
+      <a href="index.html" aria-label="proSPORT home"><img src="assets/prosport-logo.png" alt="proSPORT" class="h-6 w-auto"></a>
+      <nav class="flex flex-wrap items-center justify-center gap-x-7 gap-y-2 text-sm text-grey-600">
+        <a href="#" class="hover:text-ink transition-colors duration-200">Contact</a>
+        <a href="#" class="hover:text-ink transition-colors duration-200">FAQ</a>
+        <a href="#" class="hover:text-ink transition-colors duration-200">Our Story</a>
+        <a href="#" class="hover:text-ink transition-colors duration-200">Privacy Policy</a>
+        <a href="#" class="hover:text-ink transition-colors duration-200">Terms of Use</a>
+      </nav>
+      <p class="text-xs text-grey-400 whitespace-nowrap">&copy; 2026 proSPORT Sunglasses. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="shop.js"></script>
+  <script>
+    function openPanel(id) {
+      document.querySelectorAll('[data-panel]').forEach(p => { p.classList.remove('right-0'); p.classList.add('right-[-480px]'); });
+      const el = document.getElementById(id);
+      el.classList.remove('right-[-480px]');
+      el.classList.add('right-0');
+      const b = document.getElementById('panelBackdrop');
+      b.classList.remove('opacity-0', 'invisible');
+    }
+    function closePanels() {
+      document.querySelectorAll('[data-panel]').forEach(p => { p.classList.remove('right-0'); p.classList.add('right-[-480px]'); });
+      const b = document.getElementById('panelBackdrop');
+      b.classList.add('opacity-0', 'invisible');
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closePanels(); });
+    renderGrid('bestGrid', SHOP_PRODUCTS.slice(0, 8));
+  </script>
+
+</body>
+</html>
