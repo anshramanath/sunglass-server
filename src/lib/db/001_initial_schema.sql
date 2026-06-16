@@ -1,6 +1,7 @@
 -- ============================================================
 -- 001_initial_schema.sql
--- Initial schema for sunglass monster multi-brand platform
+-- Full schema for sunglass monster multi-brand platform
+-- Includes: core catalog + user cart and bookmarks
 -- ============================================================
 
 create table brands (
@@ -88,3 +89,39 @@ create table product_description_images (
 create table admins (
   user_id uuid primary key references auth.users(id)
 );
+
+create table cart_items (
+  id            uuid        primary key default gen_random_uuid(),
+  user_id       uuid        not null references auth.users(id) on delete cascade,
+  brand_slug    text        not null,
+  product_slug  text        not null,
+  attribute     jsonb       not null default '[]',
+  name          text        not null,
+  image_src     text        not null,
+  price_cents   int         not null,
+  quantity      int         not null default 1 check (quantity > 0),
+  updated_at    timestamptz not null default now()
+);
+
+create policy "cart_items: users manage own rows"
+  on cart_items for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+
+create table bookmarks (
+  id            uuid        primary key default gen_random_uuid(),
+  user_id       uuid        not null references auth.users(id) on delete cascade,
+  brand_slug    text        not null,
+  product_slug  text        not null,
+  attribute     jsonb       not null default '[]',
+  name          text        not null,
+  image_src     text        not null,
+  created_at    timestamptz not null default now(),
+  unique (user_id, brand_slug, product_slug)
+);
+
+create policy "bookmarks: users manage own rows"
+  on bookmarks for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);

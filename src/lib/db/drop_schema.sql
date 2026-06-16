@@ -4,6 +4,8 @@
 -- Development only — never run in production
 -- ============================================================
 
+drop table if exists bookmarks cascade;
+drop table if exists cart_items cascade;
 drop table if exists admins cascade;
 drop table if exists product_description_images cascade;
 drop table if exists description_images cascade;

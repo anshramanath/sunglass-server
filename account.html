@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Account — proSPORT</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    // Tailwind config — derived from the Aritzia token set (exact values),
+    // re-themed for proSPORT. Monochrome + cool-grey ladder, px type scale,
+    // radius-0, hairlines. Brand colour lives in the logo only. No custom CSS.
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Hanken Grotesk"', 'Helvetica Neue', 'Arial', 'sans-serif'] },
+          colors: {
+            ink: '#000000',
+            paper: '#FFFFFF',
+            brand: '#2EA3DC',
+            sale: '#2EA3DC',
+            grey: {
+              950: '#141414', 800: '#333333', 700: '#4A4A4A', 600: '#5E5E5E',
+              500: '#6E6E6E', 400: '#8C8C8C', 300: '#C9C9C9', 250: '#D6D6D6',
+              200: '#E2E2E2', 150: '#E9E9E9', 100: '#ECECEC', 75: '#F2F2F2', 50: '#F6F6F6'
+            }
+          },
+          fontSize: {
+            '2xs': ['11px', '1.4'], 'xs': ['12px', '1.4'], 'sm': ['13px', '1.4'],
+            'base': ['15px', '1.55'], 'md': ['16px', '1.55'], 'lg': ['18px', '1.5'],
+            'xl': ['21px', '1.3'], '2xl': ['26px', '1.2'], '3xl': ['34px', '1.15'],
+            '4xl': ['44px', '1.08'], '5xl': ['56px', '1.05'], '6xl': ['68px', '1.03']
+          },
+          letterSpacing: { tightish: '-0.01em', wide: '0.04em', wider: '0.10em' },
+          maxWidth: { shell: '1680px' },
+          boxShadow: { pop: '0 8px 30px rgba(0,0,0,0.12)' },
+          transitionTimingFunction: { standard: 'cubic-bezier(0.4,0,0.2,1)' }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="font-sans bg-paper text-ink antialiased">
+
+  <!-- ============ MINIMAL HEADER (logo + back) ============ -->
+  <header class="border-b border-grey-200">
+    <div class="mx-auto max-w-[920px] px-5 lg:px-10">
+      <div class="h-16 flex items-center justify-between gap-4">
+        <a href="index.html" class="shrink-0" aria-label="proSPORT home">
+          <img src="assets/prosport-logo.png" alt="proSPORT" class="h-8 w-auto">
+        </a>
+        <button type="button" onclick="history.length > 1 ? history.back() : (location.href='index.html')" class="flex items-center gap-1.5 whitespace-nowrap text-sm hover:opacity-60 transition-opacity duration-200">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Back
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ ACCOUNT ============ -->
+  <main class="mx-auto max-w-[920px] px-5 lg:px-10 py-10 lg:py-14">
+
+    <!-- header -->
+    <div class="flex items-end justify-between gap-4 border-b border-grey-200 pb-7">
+      <div>
+        <p class="text-sm uppercase tracking-wider text-grey-400 font-medium">My Account</p>
+        <h1 class="text-3xl lg:text-4xl font-normal tracking-tightish mt-2">Hi, Marcus</h1>
+      </div>
+      <a href="signin.html" class="whitespace-nowrap text-sm underline underline-offset-4 text-grey-600 hover:text-ink transition-colors duration-200">Sign Out</a>
+    </div>
+
+    <!-- account details -->
+    <section class="mt-10">
+      <div class="flex items-baseline justify-between">
+        <h2 class="text-xl font-normal">Account Details</h2>
+        <a href="#" class="text-sm underline underline-offset-4 text-grey-600 hover:text-ink transition-colors duration-200">Edit</a>
+      </div>
+      <dl class="mt-6 grid sm:grid-cols-2 gap-y-6 gap-x-10">
+        <div>
+          <dt class="text-sm text-grey-500">Name</dt>
+          <dd class="text-base mt-1">Marcus Avila</dd>
+        </div>
+        <div>
+          <dt class="text-sm text-grey-500">Email</dt>
+          <dd class="text-base mt-1"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1c717d6e7f696f327d6a75707d5c79647d716c7079327f7371">[email&#160;protected]</a></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-grey-500">Phone</dt>
+          <dd class="text-base mt-1">(415) 555-0182</dd>
+        </div>
+        <div>
+          <dt class="text-sm text-grey-500">Member Since</dt>
+          <dd class="text-base mt-1">March 2024</dd>
+        </div>
+      </dl>
+    </section>
+
+    <!-- default address -->
+    <section class="mt-10 border-t border-grey-200 pt-10">
+      <div class="flex items-baseline justify-between">
+        <h2 class="text-xl font-normal">Default Shipping Address</h2>
+        <a href="#" class="text-sm underline underline-offset-4 text-grey-600 hover:text-ink transition-colors duration-200">Edit</a>
+      </div>
+      <address class="text-base text-grey-700 leading-relaxed not-italic mt-5">
+        Marcus Avila<br>
+        2841 Folsom Street, Apt 4<br>
+        San Francisco, CA 94110<br>
+        United States
+      </address>
+    </section>
+
+    <!-- order history -->
+    <section class="mt-10 border-t border-grey-200 pt-10">
+      <h2 class="text-xl font-normal">Order History</h2>
+
+      <div class="mt-6 space-y-5">
+
+        <!-- order 1 -->
+        <div class="border border-grey-200">
+          <div class="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-6 py-4 border-b border-grey-200">
+            <div class="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
+              <span><span class="text-grey-500">Order</span> <span class="text-ink">#BS-10428</span></span>
+              <span class="text-grey-500">Placed June 2, 2026</span>
+            </div>
+            <span class="text-2xs uppercase tracking-wider font-medium text-ink border border-grey-300 px-2.5 py-1">Delivered</span>
+          </div>
+          <div class="px-5 sm:px-6 py-5">
+            <div class="space-y-4">
+              <div class="flex items-center gap-4">
+                <a href="product.html" class="block w-16 shrink-0 bg-grey-100 aspect-[4/5] overflow-hidden flex items-center justify-center p-1.5">
+                  <img src="https://zgcekcoatiskqbdruadg.supabase.co/storage/v1/object/public/bikershades/2022_05_Airspeed-Black-Front.jpg" alt="Airspeed" class="w-full h-full object-contain mix-blend-multiply">
+                </a>
+                <div class="flex-1 min-w-0">
+                  <a href="product.html" class="text-base hover:opacity-60 transition-opacity duration-200">Airspeed</a>
+                  <p class="text-sm text-grey-500 mt-0.5">Gunmetal HD · Qty 1</p>
+                </div>
+                <p class="text-base">$17.99</p>
+              </div>
+              <div class="flex items-center gap-4">
+                <a href="product.html" class="block w-16 shrink-0 bg-grey-100 aspect-[4/5] overflow-hidden flex items-center justify-center p-1.5">
+                  <img src="https://zgcekcoatiskqbdruadg.supabase.co/storage/v1/object/public/bikershades/2022_09_Convair-Gunmetal-Smoke-Front.jpg" alt="Convair" class="w-full h-full object-contain mix-blend-multiply">
+                </a>
+                <div class="flex-1 min-w-0">
+                  <a href="product.html" class="text-base hover:opacity-60 transition-opacity duration-200">Convair</a>
+                  <p class="text-sm text-grey-500 mt-0.5">Gunmetal Smoke · Qty 1</p>
+                </div>
+                <p class="text-base">$19.99</p>
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-6 py-4 border-t border-grey-200">
+            <p class="text-base"><span class="text-grey-500">Total</span> $40.98</p>
+            <div class="flex items-center gap-5">
+              <a href="#" class="text-sm underline underline-offset-4 text-grey-600 hover:text-ink transition-colors duration-200">View Details</a>
+              <a href="product.html" class="text-sm underline underline-offset-4 text-grey-600 hover:text-ink transition-colors duration-200">Buy Again</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- order 2 -->
+        <div class="border border-grey-200">
+          <div class="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-6 py-4 border-b border-grey-200">
+            <div class="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
+              <span><span class="text-grey-500">Order</span> <span class="text-ink">#BS-10319</span></span>
+              <span class="text-grey-500">Placed May 18, 2026</span>
+            </div>
+            <span class="text-2xs uppercase tracking-wider font-medium text-sale border border-sale px-2.5 py-1">Shipped</span>
+          </div>
+          <div class="px-5 sm:px-6 py-5">
+            <div class="flex items-center gap-4">
+              <a href="product.html" class="block w-16 shrink-0 bg-grey-100 aspect-[4/5] overflow-hidden flex items-center justify-center p-1.5">
+                <img src="https://zgcekcoatiskqbdruadg.supabase.co/storage/v1/object/public/bikershades/2024_05_Atlas-Black-Front.jpg" alt="Atlas" class="w-full h-full object-contain mix-blend-multiply">
+              </a>
+              <div class="flex-1 min-w-0">
+                <a href="product.html" class="text-base hover:opacity-60 transition-opacity duration-200">Atlas</a>
+                <p class="text-sm text-grey-500 mt-0.5">Matte Black · Qty 1</p>
+              </div>
+              <p class="text-base">$17.99</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-6 py-4 border-t border-grey-200">
+            <p class="text-base"><span class="text-grey-500">Total</span> $17.99</p>
+            <div class="flex items-center gap-5">
+              <a href="#" class="text-sm underline underline-offset-4 text-grey-600 hover:text-ink transition-colors duration-200">View Details</a>
+              <a href="#" class="text-sm underline underline-offset-4 text-grey-600 hover:text-ink transition-colors duration-200">Track Order</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- order 3 -->
+        <div class="border border-grey-200">
+          <div class="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-6 py-4 border-b border-grey-200">
+            <div class="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
+              <span><span class="text-grey-500">Order</span> <span class="text-ink">#BS-10204</span></span>
+              <span class="text-grey-500">Placed April 27, 2026</span>
+            </div>
+            <span class="text-2xs uppercase tracking-wider font-medium text-ink border border-grey-300 px-2.5 py-1">Delivered</span>
+          </div>
+          <div class="px-5 sm:px-6 py-5">
+            <div class="space-y-4">
+              <div class="flex items-center gap-4">
+                <a href="product.html" class="block w-16 shrink-0 bg-grey-100 aspect-[4/5] overflow-hidden flex items-center justify-center p-1.5">
+                  <img src="https://zgcekcoatiskqbdruadg.supabase.co/storage/v1/object/public/bikershades/2024_05_Backspin-Glossy-Black-Green-Smoke-Front.jpg" alt="Backspin" class="w-full h-full object-contain mix-blend-multiply">
+                </a>
+                <div class="flex-1 min-w-0">
+                  <a href="product.html" class="text-base hover:opacity-60 transition-opacity duration-200">Backspin</a>
+                  <p class="text-sm text-grey-500 mt-0.5">Glossy Black · Qty 1</p>
+                </div>
+                <p class="text-base">$19.99</p>
+              </div>
+              <div class="flex items-center gap-4">
+                <a href="product.html" class="block w-16 shrink-0 bg-grey-100 aspect-[4/5] overflow-hidden flex items-center justify-center p-1.5">
+                  <img src="https://zgcekcoatiskqbdruadg.supabase.co/storage/v1/object/public/bikershades/2024_05_Hollywood-Black-Front.jpg" alt="Hollywood" class="w-full h-full object-contain mix-blend-multiply">
+                </a>
+                <div class="flex-1 min-w-0">
+                  <a href="product.html" class="text-base hover:opacity-60 transition-opacity duration-200">Hollywood</a>
+                  <p class="text-sm text-grey-500 mt-0.5">Black · Qty 1</p>
+                </div>
+                <p class="text-base">$15.99</p>
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-6 py-4 border-t border-grey-200">
+            <p class="text-base"><span class="text-grey-500">Total</span> $35.98</p>
+            <div class="flex items-center gap-5">
+              <a href="#" class="text-sm underline underline-offset-4 text-grey-600 hover:text-ink transition-colors duration-200">View Details</a>
+              <a href="product.html" class="text-sm underline underline-offset-4 text-grey-600 hover:text-ink transition-colors duration-200">Buy Again</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script></body>
+</html>
