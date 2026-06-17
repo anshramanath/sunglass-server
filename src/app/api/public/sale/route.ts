@@ -2,22 +2,10 @@ import { NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ok, err } from "@/lib/api";
 
-const FILTER_MAP: Record<string, { sale?: boolean; minPrice?: number; maxPrice?: number }> = {
-  "under-15": { maxPrice: 1500 },
-  "15-25":    { minPrice: 1500, maxPrice: 2500 },
-  "25-plus":  { minPrice: 2500 },
-  "sale":     { sale: true },
-};
-
 export async function GET(req: NextRequest) {
   const params = req.nextUrl.searchParams;
   const brandSlug = params.get("brandSlug");
-  const categoryId = params.get("categoryId");
-  const filterSlug = params.get("filter") ?? undefined;
-  const activeFilter = filterSlug ? FILTER_MAP[filterSlug] : undefined;
-
   if (!brandSlug) return err("brandSlug is required", 400);
-  if (!categoryId) return err("categoryId is required", 400);
 
   const page = Math.max(1, Number(params.get("page")) || 1);
   const size = Math.min(100, Math.max(1, Number(params.get("size")) || 24));
@@ -35,20 +23,16 @@ export async function GET(req: NextRequest) {
   const from = (page - 1) * size;
   const to = from + size - 1;
 
-  let q = supabase
+  const { data, count, error } = await supabase
     .from("products")
-    .select("id, name, slug, attributes, featured, sale, min_price_cents, max_price_cents, sale_price_cents, product_categories!inner(category_id), product_images!inner(src, name)", { count: "exact" })
+    .select("id, name, slug, attributes, featured, sale, min_price_cents, max_price_cents, sale_price_cents, product_images!inner(src, name)", { count: "exact" })
     .eq("brand_id", brand.id)
-    .eq("product_categories.category_id", categoryId)
-    .eq("in_stock", true);
+    .eq("sale", true)
+    .eq("in_stock", true)
+    .order("name", { ascending: true })
+    .range(from, to);
 
-  if (activeFilter?.sale) q = q.eq("sale", true);
-  if (activeFilter?.minPrice !== undefined) q = q.gte("min_price_cents", activeFilter.minPrice);
-  if (activeFilter?.maxPrice !== undefined) q = q.lte("min_price_cents", activeFilter.maxPrice);
-
-  const { data, count, error } = await q.order("name", { ascending: true }).range(from, to);
-
-  if (error) return err("Failed to fetch products", 500);
+  if (error) return err("Failed to fetch sale products", 500);
 
   const totalProducts = count ?? 0;
   const totalPages = Math.ceil(totalProducts / size);
