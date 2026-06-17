@@ -103,6 +103,9 @@ create table cart_items (
   updated_at    timestamptz not null default now()
 );
 
+alter table cart_items enable row level security;
+grant select, insert, update, delete on cart_items to authenticated;
+
 create policy "cart_items: users manage own rows"
   on cart_items for all
   using (auth.uid() = user_id)
@@ -120,6 +123,9 @@ create table bookmarks (
   created_at    timestamptz not null default now(),
   unique (user_id, brand_slug, product_slug)
 );
+
+alter table bookmarks enable row level security;
+grant select, insert, update, delete on bookmarks to authenticated;
 
 create policy "bookmarks: users manage own rows"
   on bookmarks for all

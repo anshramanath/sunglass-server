@@ -14,7 +14,8 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await supabase
     .from("bookmarks")
-    .select("product_slug, attribute, name, image_src");
+    .select("product_slug, attribute, name, image_src")
+    .eq("brand_slug", brandSlug);
 
   if (error) return err("Failed to fetch bookmarks", 500);
 
