@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   if (!categoryId) return err("categoryId is required", 400);
 
   const page = Math.max(1, Number(params.get("page")) || 1);
-  const size = Math.min(100, Math.max(1, Number(params.get("size")) || 24));
+  const size = Math.min(100, Math.max(1, Number(params.get("size")) || 20));
 
   const supabase = createAdminClient();
 
