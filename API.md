@@ -124,7 +124,7 @@ Full product detail including variations, all images, and description images.
 | Param | Required | Description |
 |-------|----------|-------------|
 | brandSlug | yes | Brand slug |
-| productId | yes | Product UUID |
+| slug | yes | Product slug |
 
 **Response**
 ```json
