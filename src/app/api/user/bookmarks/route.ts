@@ -12,15 +12,13 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await supabase
     .from("bookmarks")
-    .select("product_slug, sku, attribute, name, image_src")
+    .select("product_slug, name, image_src")
     .eq("brand_slug", brandSlug);
 
   if (error) return err("Failed to fetch bookmarks", 500);
 
-  const items = (data ?? []).map((row: { product_slug: string; sku: string; attribute: { name: string; option: string }[]; name: string; image_src: string }) => ({
+  const items = (data ?? []).map((row: { product_slug: string; name: string; image_src: string }) => ({
     productSlug: row.product_slug,
-    sku: row.sku,
-    attribute: row.attribute ?? [],
     name: row.name,
     imageSrc: row.image_src,
   }));
@@ -49,16 +47,12 @@ export async function PUT(req: NextRequest) {
   if (items.length > 0) {
     const rows = items.map((item: {
       productSlug: string;
-      sku: string;
-      attribute: { name: string; option: string }[];
       name: string;
       imageSrc: string;
     }) => ({
       user_id: userId,
       brand_slug: brandSlug,
       product_slug: item.productSlug,
-      sku: item.sku,
-      attribute: item.attribute,
       name: item.name,
       image_src: item.imageSrc,
     }));
