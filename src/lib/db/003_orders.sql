@@ -6,7 +6,7 @@
 
 create table orders (
   id                    uuid        primary key default gen_random_uuid(),
-  user_id               uuid        not null references auth.users(id) on delete cascade,
+  user_id               uuid        references auth.users(id) on delete set null,
   brand_slug            text        not null references brands(slug) on delete cascade,
   stripe_session_id     text        not null unique,
   stripe_payment_intent text not null,
