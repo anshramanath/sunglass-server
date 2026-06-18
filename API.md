@@ -83,7 +83,6 @@ Paginated products for a leaf category. Default page size is 20.
       "minPriceCents": 1650,
       "maxPriceCents": 1995,
       "salePriceCents": null,
-      "attributes": [{ "name": "Color", "options": ["Black", "Tortoise"] }],
       "featured": false,
       "sale": false,
       "images": [{ "src": "https://...", "name": "Front" }]
@@ -201,7 +200,7 @@ Checks whether each cart item's product and variation still exist in the catalog
 {
   "brandSlug": "sunglass-monster",
   "items": [
-    { "sku": "SKU-BLK" }
+    { "sku": "SKU-BLK", "productSlug": "sport-sunglasses" }
   ]
 }
 ```
@@ -210,8 +209,8 @@ Checks whether each cart item's product and variation still exist in the catalog
 ```json
 {
   "items": [
-    { "sku": "SKU-BLK", "exists": true },
-    { "sku": "SKU-OLD", "exists": false }
+    { "sku": "SKU-BLK", "productSlug": "sport-sunglasses", "exists": true },
+    { "sku": "SKU-OLD", "productSlug": "old-product", "exists": false }
   ]
 }
 ```
@@ -294,7 +293,6 @@ Returns the user's bookmarks for a brand.
   "items": [
     {
       "productSlug": "sport-sunglasses",
-      "attribute": [{ "name": "Color", "option": "Black" }],
       "name": "Sport Sunglasses",
       "imageSrc": "https://..."
     }
@@ -315,7 +313,6 @@ Replaces the user's bookmarks for a brand (delete + insert). Pass an empty array
   "items": [
     {
       "productSlug": "sport-sunglasses",
-      "attribute": [],
       "name": "Sport Sunglasses",
       "imageSrc": "https://..."
     }
@@ -326,6 +323,42 @@ Replaces the user's bookmarks for a brand (delete + insert). Pass an empty array
 **Response**
 ```json
 { "synced": 1 }
+```
+
+---
+
+### GET /api/user/orders
+
+Returns the user's order history for a brand, newest first.
+
+**Query Params**
+| Param | Required | Description |
+|-------|----------|-------------|
+| brandSlug | yes | Brand slug |
+
+**Response**
+```json
+{
+  "orders": [
+    {
+      "id": "uuid",
+      "status": "paid",
+      "totalCents": 7774,
+      "createdAt": "2026-06-18T18:35:31.167Z",
+      "items": [
+        {
+          "productSlug": "sport-sunglasses",
+          "sku": "SKU-BLK",
+          "name": "Sport Sunglasses",
+          "imageSrc": "https://...",
+          "priceCents": 1650,
+          "quantity": 2,
+          "attribute": [{ "name": "Color", "option": "Black" }]
+        }
+      ]
+    }
+  ]
+}
 ```
 
 ---
@@ -367,4 +400,4 @@ Creates a Stripe checkout session for the user's cart. Returns a URL to redirect
 
 Stripe webhook handler. Verified via `stripe-signature` header. Only handles `checkout.session.completed`.
 
-On payment completion: inserts an `orders` row and `order_items` rows derived from the Stripe line items. Idempotent — duplicate deliveries are ignored via `stripe_session_id` unique constraint.
+On payment completion: inserts an `orders` row and `order_items` rows derived from the Stripe line items, then atomically increments `total_sales` on the relevant product or variation. Idempotent — duplicate deliveries are ignored via `stripe_session_id` unique constraint.
