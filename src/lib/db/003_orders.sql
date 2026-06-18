@@ -9,7 +9,7 @@ create table orders (
   user_id               uuid        not null references auth.users(id) on delete cascade,
   brand_slug            text        not null references brands(slug) on delete cascade,
   stripe_session_id     text        not null unique,
-  stripe_payment_intent text,
+  stripe_payment_intent text not null,
   status                text        not null default 'pending',
   total_cents           int         not null,
   created_at            timestamptz not null default now()
