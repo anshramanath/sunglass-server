@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
 
   if (existing) return new Response("OK", { status: 200 });
 
-  const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 100 });
+  const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 100, expand: ["data.price.product"] });
 
   const skus = lineItems.data.map((item) => {
     const desc = item.description ?? "";
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 
   const { data: variations } = await supabase
     .from("variations")
-    .select("sku, attribute, products!inner(slug, product_images(src, sort_order))")
+    .select("sku, attribute, products!inner(slug)")
     .in("sku", skus);
 
   const variationMap = new Map((variations ?? []).map((v) => [v.sku, v]));
@@ -66,14 +66,13 @@ export async function POST(req: NextRequest) {
     const sku = start !== -1 ? desc.slice(start + 1, -1) : "";
     const variation = variationMap.get(sku);
     const product = variation?.products as any;
-    const image = (product?.product_images ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order)[0];
 
     return {
       order_id: order.id,
       product_slug: product?.slug ?? "",
       sku,
-      name: item.description?.slice(0, item.description.lastIndexOf(" (")) ?? "",
-      image_src: image?.src ?? "",
+      name: desc.slice(0, start !== -1 ? start - 1 : desc.length),
+      image_src: (item as any).price?.product?.images[0],
       price_cents: item.price?.unit_amount ?? 0,
       quantity: item.quantity ?? 1,
       attribute: variation?.attribute ?? [],

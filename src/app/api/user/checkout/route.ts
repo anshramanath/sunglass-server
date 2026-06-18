@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
           currency: "usd",
           product_data: {
             name: `${item.name} (${item.sku})`,
+            images: item.imageSrc ? [item.imageSrc] : [],
           },
           unit_amount: item.priceCents,
         },
