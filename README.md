@@ -89,7 +89,8 @@ src/
     │   ├── admin.ts               # Service role client (public catalog)
     │   └── user.ts                # User client from Bearer token (authed endpoints)
     └── db/
-        ├── 001_initial_schema.sql # Full schema — brands, categories, products, cart, bookmarks
+        ├── 001_initial_schema.sql      # Full current schema
+        ├── 002_user_cart_bookmarks.sql # Historical — cart and bookmarks initial migration
         └── drop_schema.sql
 ```
 
