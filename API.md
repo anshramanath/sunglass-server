@@ -53,7 +53,7 @@ Returns the full category tree for a brand. `sortOrder` is the authoritative ord
 
 ### GET /api/public/products
 
-Paginated in-stock products for a leaf category. Default page size is 20.
+Paginated products for a leaf category. Default page size is 20.
 
 **Query Params**
 | Param | Required | Default | Description |
@@ -102,7 +102,7 @@ Paginated in-stock products for a leaf category. Default page size is 20.
 
 ### GET /api/public/sale
 
-Paginated in-stock sale products (`sale = true`). Same shape as `/products`. No `sale` filter slug — the endpoint is already scoped to sale items.
+Paginated sale products (`sale = true`). No `sale` filter slug — the endpoint is already scoped to sale items.
 
 **Query Params**
 | Param | Required | Default | Description |
@@ -162,7 +162,7 @@ Full product detail including variations, all images, and description images.
 
 ### GET /api/public/search
 
-Case-insensitive product name search. Returns up to 6 in-stock results.
+Case-insensitive product name search. Returns up to 6 results.
 
 **Query Params**
 | Param | Required | Description |
@@ -192,6 +192,32 @@ Case-insensitive product name search. Returns up to 6 in-stock results.
 
 ---
 
+### POST /api/public/validate-cart
+
+Checks whether each cart item's product and variation still exist in the catalog. Call on cart page entry and before creating a checkout session.
+
+**Body**
+```json
+{
+  "brandSlug": "sunglass-monster",
+  "items": [
+    { "sku": "SKU-BLK" }
+  ]
+}
+```
+
+**Response**
+```json
+{
+  "items": [
+    { "sku": "SKU-BLK", "exists": true },
+    { "sku": "SKU-OLD", "exists": false }
+  ]
+}
+```
+
+---
+
 ## Authenticated Endpoints
 
 All require `Authorization: Bearer <supabase_access_token>`. Queries are scoped to `user_id` + `brand_slug` via RLS.
@@ -211,6 +237,7 @@ Returns the user's cart items for a brand.
   "items": [
     {
       "productSlug": "sport-sunglasses",
+      "sku": "SKU-BLK",
       "attribute": [{ "name": "Color", "option": "Black" }],
       "name": "Sport Sunglasses",
       "imageSrc": "https://...",
@@ -234,6 +261,7 @@ Replaces the user's cart for a brand (delete + insert). Pass an empty array to c
   "items": [
     {
       "productSlug": "sport-sunglasses",
+      "sku": "SKU-BLK",
       "attribute": [{ "name": "Color", "option": "Black" }],
       "name": "Sport Sunglasses",
       "imageSrc": "https://...",
@@ -299,3 +327,44 @@ Replaces the user's bookmarks for a brand (delete + insert). Pass an empty array
 ```json
 { "synced": 1 }
 ```
+
+---
+
+### POST /api/user/checkout
+
+Creates a Stripe checkout session for the user's cart. Returns a URL to redirect the user to Stripe. Idempotent — same cart and order count returns the same session URL.
+
+**Body**
+```json
+{
+  "brandSlug": "sunglass-monster",
+  "items": [
+    {
+      "productSlug": "sport-sunglasses",
+      "sku": "SKU-BLK",
+      "name": "Sport Sunglasses",
+      "imageSrc": "https://...",
+      "priceCents": 1650,
+      "quantity": 2,
+      "attribute": [{ "name": "Color", "option": "Black" }]
+    }
+  ],
+  "successUrl": "https://yourdomain.com/order/success",
+  "cancelUrl": "https://yourdomain.com/cart"
+}
+```
+
+**Response**
+```json
+{ "url": "https://checkout.stripe.com/..." }
+```
+
+---
+
+## Webhooks
+
+### POST /api/webhooks/stripe
+
+Stripe webhook handler. Verified via `stripe-signature` header. Only handles `checkout.session.completed`.
+
+On payment completion: inserts an `orders` row and `order_items` rows derived from the Stripe line items. Idempotent — duplicate deliveries are ignored via `stripe_session_id` unique constraint.

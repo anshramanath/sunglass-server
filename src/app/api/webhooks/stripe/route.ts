@@ -61,8 +61,9 @@ export async function POST(req: NextRequest) {
   if (orderError || !order) return new Response("Failed to create order", { status: 500 });
 
   const orderItems = lineItems.data.map((item) => {
-    const match = item.description?.match(/\(([^)]+)\)$/);
-    const sku = match ? match[1] : "";
+    const desc = item.description ?? "";
+    const start = desc.lastIndexOf("(");
+    const sku = start !== -1 ? desc.slice(start + 1, -1) : "";
     const variation = variationMap.get(sku);
     const product = variation?.products as any;
     const image = (product?.product_images ?? []).sort((a: any, b: any) => a.sort_order - b.sort_order)[0];
