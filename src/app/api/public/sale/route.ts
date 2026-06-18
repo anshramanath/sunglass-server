@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
 
   let q = supabase
     .from("products")
-    .select("id, name, slug, attributes, featured, sale, min_price_cents, max_price_cents, sale_price_cents, product_images!inner(src, name)", { count: "exact" })
+    .select("id, name, slug, sku, attributes, featured, sale, min_price_cents, max_price_cents, sale_price_cents, product_images!inner(src, name)", { count: "exact" })
     .eq("brand_slug", brandSlug)
     .eq("sale", true);
 
@@ -44,6 +44,7 @@ export async function GET(req: NextRequest) {
     id: p.id,
     name: p.name,
     slug: p.slug,
+    sku: p.sku,
     minPriceCents: p.min_price_cents,
     maxPriceCents: p.max_price_cents,
     salePriceCents: p.sale_price_cents,
