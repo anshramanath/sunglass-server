@@ -14,5 +14,5 @@ export async function createUserClient(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  return { supabase, userId: user.id };
+  return { supabase, user };
 }

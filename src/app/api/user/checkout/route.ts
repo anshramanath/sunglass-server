@@ -30,7 +30,9 @@ export async function POST(req: NextRequest) {
 
   const client = await createUserClient(req);
   if (!client) return err("Unauthorized", 401);
-  const { userId } = client;
+  const { user } = client;
+  const userId = user.id;
+  const email = user.email;
 
   const supabase = createAdminClient();
   const { count } = await supabase
@@ -45,6 +47,7 @@ export async function POST(req: NextRequest) {
     {
       mode: "payment",
       client_reference_id: userId,
+      customer_email: email,
       metadata: { brandSlug },
       line_items: (items as CartItem[]).map((item) => ({
         price_data: {

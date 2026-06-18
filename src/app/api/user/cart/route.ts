@@ -38,7 +38,8 @@ export async function PUT(req: NextRequest) {
 
   const client = await createUserClient(req);
   if (!client) return err("Unauthorized", 401);
-  const { supabase, userId } = client;
+  const { supabase, user } = client;
+  const userId = user.id;
 
   const { error: deleteError } = await supabase
     .from("cart_items")
