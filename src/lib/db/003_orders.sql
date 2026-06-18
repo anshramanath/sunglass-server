@@ -27,6 +27,7 @@ create table order_items (
   id            uuid  primary key default gen_random_uuid(),
   order_id      uuid  not null references orders(id) on delete cascade,
   product_slug  text  not null,
+  sku           text  not null,
   name          text  not null,
   image_src     text  not null,
   price_cents   int   not null,

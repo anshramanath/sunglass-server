@@ -12,13 +12,14 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await supabase
     .from("cart_items")
-    .select("product_slug, attribute, name, image_src, price_cents, quantity")
+    .select("product_slug, sku, attribute, name, image_src, price_cents, quantity")
     .eq("brand_slug", brandSlug);
 
   if (error) return err("Failed to fetch cart", 500);
 
-  const items = (data ?? []).map((row: { product_slug: string; attribute: { name: string; option: string }[]; name: string; image_src: string; price_cents: number; quantity: number }) => ({
+  const items = (data ?? []).map((row: { product_slug: string; sku: string; attribute: { name: string; option: string }[]; name: string; image_src: string; price_cents: number; quantity: number }) => ({
     productSlug: row.product_slug,
+    sku: row.sku,
     attribute: row.attribute ?? [],
     name: row.name,
     imageSrc: row.image_src,
@@ -49,6 +50,7 @@ export async function PUT(req: NextRequest) {
   if (items.length > 0) {
     const rows = items.map((item: {
       productSlug: string;
+      sku: string;
       attribute: { name: string; option: string }[];
       name: string;
       imageSrc: string;
@@ -58,6 +60,7 @@ export async function PUT(req: NextRequest) {
       user_id: userId,
       brand_slug: brandSlug,
       product_slug: item.productSlug,
+      sku: item.sku,
       attribute: item.attribute,
       name: item.name,
       image_src: item.imageSrc,
