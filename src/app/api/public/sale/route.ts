@@ -28,8 +28,7 @@ export async function GET(req: NextRequest) {
     .from("products")
     .select("id, name, slug, attributes, featured, sale, min_price_cents, max_price_cents, sale_price_cents, product_images!inner(src, name)", { count: "exact" })
     .eq("brand_slug", brandSlug)
-    .eq("sale", true)
-    .eq("in_stock", true);
+    .eq("sale", true);
 
   if (activeFilter?.minPrice !== undefined) q = q.gte("min_price_cents", activeFilter.minPrice);
   if (activeFilter?.maxPrice !== undefined) q = q.lte("min_price_cents", activeFilter.maxPrice);

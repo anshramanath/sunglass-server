@@ -6,11 +6,9 @@ export async function GET(req: NextRequest) {
   const brandSlug = req.nextUrl.searchParams.get("brandSlug");
   if (!brandSlug) return err("brandSlug is required", 400);
 
-  const supabase = createUserClient(req);
-  if (!supabase) return err("Unauthorized", 401);
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return err("Unauthorized", 401);
+  const client = await createUserClient(req);
+  if (!client) return err("Unauthorized", 401);
+  const { supabase } = client;
 
   const { data, error } = await supabase
     .from("cart_items")
@@ -37,11 +35,9 @@ export async function PUT(req: NextRequest) {
   if (!brandSlug) return err("brandSlug is required", 400);
   if (!Array.isArray(items)) return err("items must be an array", 400);
 
-  const supabase = createUserClient(req);
-  if (!supabase) return err("Unauthorized", 401);
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return err("Unauthorized", 401);
+  const client = await createUserClient(req);
+  if (!client) return err("Unauthorized", 401);
+  const { supabase, userId } = client;
 
   const { error: deleteError } = await supabase
     .from("cart_items")
@@ -59,7 +55,7 @@ export async function PUT(req: NextRequest) {
       priceCents: number;
       quantity: number;
     }) => ({
-      user_id: user.id,
+      user_id: userId,
       brand_slug: brandSlug,
       product_slug: item.productSlug,
       attribute: item.attribute,
