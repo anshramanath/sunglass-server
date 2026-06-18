@@ -45,3 +45,17 @@ create policy "order_items: users read own rows"
     where orders.id = order_items.order_id
       and orders.user_id = auth.uid()
   ));
+
+create function increment_variation_total_sales(p_variation_id uuid, p_qty int)
+returns void
+language sql
+as $$
+  update variations set total_sales = total_sales + p_qty where id = p_variation_id;
+$$;
+
+create function increment_product_total_sales(p_product_id uuid, p_qty int)
+returns void
+language sql
+as $$
+  update products set total_sales = coalesce(total_sales, 0) + p_qty where id = p_product_id;
+$$;

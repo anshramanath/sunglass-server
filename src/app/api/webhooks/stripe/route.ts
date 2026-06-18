@@ -2,6 +2,10 @@ import { NextRequest } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+type SkuEntry =
+  | { type: "variation"; variationId: string; productSlug: string; attribute: { name: string; option: string }[] }
+  | { type: "simple"; productId: string; productSlug: string };
+
 export async function POST(req: NextRequest) {
   const body = await req.text();
   const sig = req.headers.get("stripe-signature");
@@ -20,6 +24,9 @@ export async function POST(req: NextRequest) {
   }
 
   const session = event.data.object;
+  const brandSlug = session.metadata?.brandSlug;
+  if (!brandSlug) return new Response("Missing brandSlug in session metadata", { status: 400 });
+
   const supabase = createAdminClient();
 
   const { data: existing } = await supabase
@@ -38,48 +45,119 @@ export async function POST(req: NextRequest) {
     return start !== -1 ? desc.slice(start + 1, -1) : null;
   }).filter(Boolean) as string[];
 
-  const { data: variations } = await supabase
-    .from("variations")
-    .select("sku, attribute, products!inner(slug)")
-    .in("sku", skus);
+  const skuMap = new Map<string, SkuEntry>();
 
-  const variationMap = new Map((variations ?? []).map((v) => [v.sku, v]));
+  if (skus.length > 0) {
+    const [{ data: variationRows }, { data: simpleProductRows }] = await Promise.all([
+      supabase
+        .from("variations")
+        .select("id, sku, attribute, products!inner(id, slug, name)")
+        .eq("products.brand_slug", brandSlug)
+        .in("sku", skus),
+      supabase
+        .from("products")
+        .select("id, slug, sku, name")
+        .eq("brand_slug", brandSlug)
+        .not("sku", "is", null)
+        .in("sku", skus),
+    ]);
+
+    for (const row of simpleProductRows ?? []) {
+      skuMap.set(`${row.name}:${row.sku}`, {
+        type: "simple",
+        productId: row.id,
+        productSlug: row.slug,
+      });
+    }
+
+    for (const row of variationRows ?? []) {
+      const product = row.products as unknown as { id: string; slug: string; name: string };
+      skuMap.set(`${product.name}:${row.sku}`, {
+        type: "variation",
+        variationId: row.id,
+        productSlug: product.slug,
+        attribute: row.attribute,
+      });
+    }
+  }
 
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .insert({
       user_id: session.client_reference_id,
-      brand_slug: session.metadata?.brandSlug,
+      brand_slug: brandSlug,
       stripe_session_id: session.id,
       stripe_payment_intent: typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id,
       status: "paid",
-      total_cents: session.amount_total,
+      total_cents: session.amount_total ?? 0,
     })
     .select("id")
     .single();
 
   if (orderError || !order) return new Response("Failed to create order", { status: 500 });
 
-  const orderItems = lineItems.data.map((item) => {
+  const orderItems: {
+    order_id: string;
+    product_slug: string;
+    sku: string;
+    name: string;
+    image_src: string;
+    price_cents: number;
+    quantity: number;
+    attribute: { name: string; option: string }[];
+  }[] = [];
+
+  for (const item of lineItems.data) {
     const desc = item.description ?? "";
     const start = desc.lastIndexOf("(");
-    const sku = start !== -1 ? desc.slice(start + 1, -1) : "";
-    const variation = variationMap.get(sku);
-    const product = variation?.products as any;
+    if (start === -1) continue;
 
-    return {
+    const sku = desc.slice(start + 1, -1);
+    const name = desc.slice(0, start - 1);
+    const entry = skuMap.get(`${name}:${sku}`);
+
+    orderItems.push({
       order_id: order.id,
-      product_slug: product?.slug ?? "",
+      product_slug: entry?.productSlug ?? "",
       sku,
-      name: desc.slice(0, start !== -1 ? start - 1 : desc.length),
-      image_src: (item as any).price?.product?.images[0],
+      name,
+      image_src: (item as any).price?.product?.images?.[0] ?? "",
       price_cents: item.price?.unit_amount ?? 0,
       quantity: item.quantity ?? 1,
-      attribute: variation?.attribute ?? [],
-    };
-  });
+      attribute: entry?.type === "variation" ? entry.attribute : [],
+    });
+  }
 
-  await supabase.from("order_items").insert(orderItems);
+  if (orderItems.length > 0) {
+    const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
+    if (itemsError) {
+      await supabase.from("orders").delete().eq("id", order.id);
+      return new Response("Failed to create order items", { status: 500 });
+    }
+  }
+
+  const productIncrements = new Map<string, number>();
+  const variationIncrements = new Map<string, number>();
+
+  for (const item of orderItems) {
+    const entry = skuMap.get(`${item.name}:${item.sku}`);
+    if (!entry) continue;
+
+    if (entry.type === "variation") {
+      variationIncrements.set(entry.variationId, (variationIncrements.get(entry.variationId) ?? 0) + item.quantity);
+    } else {
+      productIncrements.set(entry.productId, (productIncrements.get(entry.productId) ?? 0) + item.quantity);
+    }
+  }
+
+  await Promise.all([
+    ...[...productIncrements.entries()].map(([id, qty]) =>
+      supabase.rpc("increment_product_total_sales", { p_product_id: id, p_qty: qty })
+    ),
+    ...[...variationIncrements.entries()].map(([id, qty]) =>
+      supabase.rpc("increment_variation_total_sales", { p_variation_id: id, p_qty: qty })
+    ),
+  ]);
 
   return new Response("OK", { status: 200 });
 }
