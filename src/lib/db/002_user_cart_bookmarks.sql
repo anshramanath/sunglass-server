@@ -31,11 +31,11 @@ create table bookmarks (
   user_id       uuid        not null references auth.users(id) on delete cascade,
   brand_slug    text        not null references brands(slug) on delete cascade,
   product_slug  text        not null,
+  sku           text        not null,
   attribute     jsonb       not null default '[]',
   name          text        not null,
   image_src     text        not null,
-  created_at    timestamptz not null default now(),
-  unique (user_id, brand_slug, product_slug)
+  created_at    timestamptz not null default now()
 );
 
 alter table bookmarks enable row level security;
