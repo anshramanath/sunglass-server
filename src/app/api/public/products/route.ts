@@ -24,21 +24,13 @@ export async function GET(req: NextRequest) {
 
   const supabase = createAdminClient();
 
-  const { data: brand, error: brandError } = await supabase
-    .from("brands")
-    .select("id")
-    .eq("slug", brandSlug)
-    .single();
-
-  if (brandError || !brand) return err("Brand not found", 404);
-
   const from = (page - 1) * size;
   const to = from + size - 1;
 
   let q = supabase
     .from("products")
     .select("id, name, slug, attributes, featured, sale, min_price_cents, max_price_cents, sale_price_cents, product_categories!inner(category_id), product_images!inner(src, name)", { count: "exact" })
-    .eq("brand_id", brand.id)
+    .eq("brand_slug", brandSlug)
     .eq("product_categories.category_id", categoryId)
     .eq("in_stock", true);
 

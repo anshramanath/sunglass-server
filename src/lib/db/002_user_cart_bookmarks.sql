@@ -6,7 +6,7 @@
 create table cart_items (
   id            uuid        primary key default gen_random_uuid(),
   user_id       uuid        not null references auth.users(id) on delete cascade,
-  brand_slug    text        not null,
+  brand_slug    text        not null references brands(slug) on delete cascade,
   product_slug  text        not null,
   attribute     jsonb       not null default '[]',
   name          text        not null,
@@ -28,7 +28,7 @@ create policy "cart_items: users manage own rows"
 create table bookmarks (
   id            uuid        primary key default gen_random_uuid(),
   user_id       uuid        not null references auth.users(id) on delete cascade,
-  brand_slug    text        not null,
+  brand_slug    text        not null references brands(slug) on delete cascade,
   product_slug  text        not null,
   attribute     jsonb       not null default '[]',
   name          text        not null,

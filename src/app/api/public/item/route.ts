@@ -10,14 +10,6 @@ export async function GET(req: NextRequest) {
 
   const supabase = createAdminClient();
 
-  const { data: brand } = await supabase
-    .from("brands")
-    .select("id")
-    .eq("slug", brandSlug)
-    .single();
-
-  if (!brand) return err("Brand not found!", 404);
-
   const { data: product, error } = await supabase
     .from("products")
     .select(`
@@ -32,7 +24,7 @@ export async function GET(req: NextRequest) {
       )
     `)
     .eq("slug", slug)
-    .eq("brand_id", brand.id)
+    .eq("brand_slug", brandSlug)
     .single();
 
   if (error || !product) return err("Product not found!", 404);

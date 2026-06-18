@@ -16,18 +16,10 @@ export async function GET(req: NextRequest) {
 
   const supabase = createAdminClient();
 
-  const { data: brand, error: brandError } = await supabase
-    .from("brands")
-    .select("id")
-    .eq("slug", brandSlug)
-    .single();
-
-  if (brandError || !brand) return err("Brand not found!", 404);
-
   const { data: categories } = await supabase
     .from("categories")
     .select("id, parent_id, name, slug, sort_order")
-    .eq("brand_id", brand.id);
+    .eq("brand_slug", brandSlug);
 
 
   const nodeMap: Record<string, CategoryNode> = {};

@@ -87,18 +87,28 @@ src/
     ├── api.ts                     # ok() / err() response helpers
     ├── supabase/
     │   ├── admin.ts               # Service role client (public catalog)
-    │   ├── user.ts                # User client from Bearer token (authed endpoints)
-    │   └── server.ts              # SSR client (cookie-based, unused in API routes)
+    │   └── user.ts                # User client from Bearer token (authed endpoints)
     └── db/
-        ├── 001_initial_schema.sql # Brands, categories, products, variations, images
-        ├── 002_user_cart_bookmarks.sql # cart_items and bookmarks tables + RLS
+        ├── 001_initial_schema.sql # Full schema — brands, categories, products, cart, bookmarks
         └── drop_schema.sql
 ```
 
 ## Database
 
-Schema is applied in order: `001_initial_schema.sql` then `002_user_cart_bookmarks.sql`. See `src/lib/db/` for full DDL including RLS policies.
+Schema is in `src/lib/db/001_initial_schema.sql`. Apply it to a fresh database to get the full schema including RLS policies.
 
 Key tables: `brands`, `categories`, `products`, `product_variations`, `product_images`, `cart_items`, `bookmarks`.
 
-All user data tables have RLS enabled — rows are scoped to `auth.uid()` and `brand_slug`.
+### Brand scoping
+All tables use `brand_slug text references brands(slug) on delete cascade` rather than a `brand_id` UUID. This means:
+- Queries filter directly by `brand_slug` — no intermediate brand lookup needed
+- Deleting a brand cascades to all related rows across every table
+- Invalid brand slugs are rejected by the FK constraint
+
+### Unique constraints
+- `products`: `unique(brand_slug, slug)` and `unique(brand_slug, name)` — slugs and names must be unique within a brand but can collide across brands
+- `description_images`: `unique(brand_slug, src)`
+- `bookmarks`: `unique(user_id, brand_slug, product_slug)`
+
+### RLS
+`cart_items` and `bookmarks` have RLS enabled — rows are scoped to `auth.uid()`. The authenticated Supabase client enforces this automatically.

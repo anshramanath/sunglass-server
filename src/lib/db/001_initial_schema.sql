@@ -12,7 +12,7 @@ create table brands (
 
 create table categories (
   id uuid primary key default gen_random_uuid(),
-  brand_id uuid not null references brands(id) on delete cascade,
+  brand_slug text not null references brands(slug) on delete cascade,
   parent_id uuid references categories(id) on delete cascade,
   name text not null,
   slug text not null,
@@ -21,7 +21,7 @@ create table categories (
 
 create table products (
   id uuid primary key default gen_random_uuid(),
-  brand_id uuid not null references brands(id) on delete cascade,
+  brand_slug text not null references brands(slug) on delete cascade,
   name text not null,
   slug text not null,
   sku text,
@@ -35,7 +35,9 @@ create table products (
   max_price_cents int not null,
   sale_price_cents int,
   stock int,
-  in_stock boolean not null
+  in_stock boolean not null,
+  unique (brand_slug, slug),
+  unique (brand_slug, name)
 );
 
 create table product_categories (
@@ -74,7 +76,7 @@ create table variation_images (
 
 create table description_images (
   id uuid primary key default gen_random_uuid(),
-  brand_id uuid not null references brands(id) on delete cascade,
+  brand_slug text not null references brands(slug) on delete cascade,
   src text not null,
   name text not null,
   unique (brand_id, src)
@@ -93,7 +95,7 @@ create table admins (
 create table cart_items (
   id            uuid        primary key default gen_random_uuid(),
   user_id       uuid        not null references auth.users(id) on delete cascade,
-  brand_slug    text        not null,
+  brand_slug    text        not null references brands(slug) on delete cascade,
   product_slug  text        not null,
   attribute     jsonb       not null default '[]',
   name          text        not null,
@@ -115,7 +117,7 @@ create policy "cart_items: users manage own rows"
 create table bookmarks (
   id            uuid        primary key default gen_random_uuid(),
   user_id       uuid        not null references auth.users(id) on delete cascade,
-  brand_slug    text        not null,
+  brand_slug    text        not null references brands(slug) on delete cascade,
   product_slug  text        not null,
   attribute     jsonb       not null default '[]',
   name          text        not null,
