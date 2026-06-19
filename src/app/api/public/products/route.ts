@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
 
   let q = supabase
     .from("products")
-    .select("id, name, slug, featured, sale, min_price_cents, max_price_cents, sale_price_cents, product_categories!inner(category_id), product_images!inner(src, name)", { count: "exact" })
+    .select("id, name, slug, featured, sale, min_price_cents, max_price_cents, sale_price_cents, product_categories!inner(category_id), product_images!inner(src, name), variations(sale, regular_price_cents, sale_price_cents, attribute, variation_images(src, name, sort_order))", { count: "exact" })
     .eq("brand_slug", brandSlug)
     .eq("product_categories.category_id", categoryId);
 
@@ -44,6 +44,8 @@ export async function GET(req: NextRequest) {
   const totalProducts = count ?? 0;
   const totalPages = Math.ceil(totalProducts / size);
 
+  type RawAttr = { name: string; option: string; slug: string; value?: string };
+
   const products = (data ?? []).map((p) => ({
     id: p.id,
     name: p.name,
@@ -54,6 +56,18 @@ export async function GET(req: NextRequest) {
     featured: p.featured,
     sale: p.sale,
     images: p.product_images.map((img: { src: string; name: string }) => ({ src: img.src, name: img.name })),
+    variations: (p.variations ?? []).map((v: { sale: boolean; regular_price_cents: number; sale_price_cents: number | null; attribute: RawAttr[]; variation_images: { src: string; name: string; sort_order: number }[] }) => ({
+      sale: v.sale,
+      regularPriceCents: v.regular_price_cents,
+      salePriceCents: v.sale_price_cents,
+      attribute: v.attribute.filter((a) => a.name === "color").map((a) => ({
+        name: a.name,
+        option: a.option,
+        slug: a.slug,
+        ...(a.value !== undefined ? { value: a.value } : {}),
+      })),
+      imageSrc: v.variation_images[0]?.src ?? null,
+    })),
   }));
 
   return ok({ products, page, size, totalPages, totalProducts, hasNextPage: page < totalPages, hasPreviousPage: page > 1 }, 200);

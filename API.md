@@ -85,7 +85,18 @@ Paginated products for a leaf category. Default page size is 20.
       "salePriceCents": null,
       "featured": false,
       "sale": false,
-      "images": [{ "src": "https://...", "name": "Front" }]
+      "images": [{ "src": "https://...", "name": "Front" }],
+      "variations": [
+        {
+          "sale": false,
+          "regularPriceCents": 1650,
+          "salePriceCents": null,
+          "attribute": [
+            { "name": "color", "option": "Gloss Black", "slug": "gloss-black", "value": "#000000" }
+          ],
+          "imageSrc": "https://..."
+        }
+      ]
     }
   ],
   "page": 1,

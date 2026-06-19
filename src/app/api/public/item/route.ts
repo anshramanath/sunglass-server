@@ -29,10 +29,17 @@ export async function GET(req: NextRequest) {
 
   if (error || !product) return err("Product not found!", 404);
 
+  type RawAttr = { name: string; option: string; slug: string; value?: string };
+
   const variations = (product.variations ?? []).map((v) => ({
     id: v.id,
     sku: v.sku,
-    attribute: v.attribute,
+    attribute: (v.attribute as RawAttr[]).map((a) => ({
+      name: a.name,
+      option: a.option,
+      slug: a.slug,
+      ...(a.value !== undefined ? { value: a.value } : {}),
+    })),
     sale: v.sale,
     regularPriceCents: v.regular_price_cents,
     salePriceCents: v.sale_price_cents,
@@ -50,7 +57,14 @@ export async function GET(req: NextRequest) {
     sku: product.sku,
     description: product.description,
     summary: product.summary,
-    attributes: product.attributes,
+    attributes: (product.attributes as { name: string; options: { option: string; slug: string; value?: string }[] }[]).map((attr) => ({
+      name: attr.name,
+      options: attr.options.map((opt) => ({
+        option: opt.option,
+        slug: opt.slug,
+        ...(opt.value !== undefined ? { value: opt.value } : {}),
+      })),
+    })),
     featured: product.featured,
     sale: product.sale,
     minPriceCents: product.min_price_cents,
