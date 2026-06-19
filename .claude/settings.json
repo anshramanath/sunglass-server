@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const s = require\\('/Users/anshramanath/Desktop/sunglass-server/node_modules/stripe'\\); console.log\\(Object.keys\\(s\\)\\)\")"
+    ]
+  }
+}

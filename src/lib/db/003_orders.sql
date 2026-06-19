@@ -12,6 +12,7 @@ create table orders (
   stripe_payment_intent text not null unique,
   status                text        not null default 'pending',
   total_cents           int         not null,
+  shipping_address      jsonb       not null,
   created_at            timestamptz not null default now()
 );
 

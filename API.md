@@ -344,6 +344,15 @@ Returns the user's order history for a brand, newest first.
       "id": "uuid",
       "status": "paid",
       "totalCents": 7774,
+      "shippingAddress": {
+        "name": "John Smith",
+        "line1": "123 Main St",
+        "line2": null,
+        "city": "Austin",
+        "state": "TX",
+        "postalCode": "78701",
+        "country": "US"
+      },
       "createdAt": "2026-06-18T18:35:31.167Z",
       "items": [
         {
@@ -365,7 +374,7 @@ Returns the user's order history for a brand, newest first.
 
 ### POST /api/user/checkout
 
-Creates a Stripe checkout session for the user's cart. Returns a URL to redirect the user to Stripe. Idempotent — same cart and order count returns the same session URL.
+Creates a Stripe checkout session for the user's cart. Returns a URL to redirect the user to Stripe. Stripe collects the shipping address as part of the checkout flow. Idempotent — same cart and order count returns the same session URL.
 
 **Body**
 ```json

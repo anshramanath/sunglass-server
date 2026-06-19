@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await supabase
     .from("orders")
-    .select("id, status, total_cents, created_at, order_items(product_slug, sku, name, image_src, price_cents, quantity, attribute)")
+    .select("id, status, total_cents, shipping_address, created_at, order_items(product_slug, sku, name, image_src, price_cents, quantity, attribute)")
     .eq("brand_slug", brandSlug)
     .order("created_at", { ascending: false });
 
@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
     id: order.id,
     status: order.status,
     totalCents: order.total_cents,
+    shippingAddress: order.shipping_address,
     createdAt: order.created_at,
     items: (order.order_items ?? []).map((item) => ({
       productSlug: item.product_slug,
