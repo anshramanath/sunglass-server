@@ -34,8 +34,6 @@ create table products (
   min_price_cents int not null,
   max_price_cents int not null,
   sale_price_cents int,
-  stock int,
-  in_stock boolean not null,
   unique (brand_slug, slug),
   unique (brand_slug, name)
 );
@@ -54,7 +52,6 @@ create table variations (
   sale boolean not null,
   regular_price_cents int not null,
   sale_price_cents int,
-  stock int not null,
   total_sales int not null
 );
 

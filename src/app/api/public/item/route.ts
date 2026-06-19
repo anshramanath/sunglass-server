@@ -14,8 +14,8 @@ export async function GET(req: NextRequest) {
     .from("products")
     .select(`
       id, name, sku, description, summary, attributes, featured,
-      sale, min_price_cents, max_price_cents, sale_price_cents, stock,
-      variations(id, sku, attribute, sale, regular_price_cents, sale_price_cents, stock,
+      sale, min_price_cents, max_price_cents, sale_price_cents,
+      variations(id, sku, attribute, sale, regular_price_cents, sale_price_cents,
         variation_images(src, name, sort_order)
       ),
       product_images(src, name, sort_order),
@@ -36,8 +36,6 @@ export async function GET(req: NextRequest) {
     sale: v.sale,
     regularPriceCents: v.regular_price_cents,
     salePriceCents: v.sale_price_cents,
-    stock: v.stock,
-
     images: (v.variation_images ?? []).map((img) => ({ src: img.src, name: img.name, sortOrder: img.sort_order })),
   }));
 
@@ -58,7 +56,6 @@ export async function GET(req: NextRequest) {
     minPriceCents: product.min_price_cents,
     maxPriceCents: product.max_price_cents,
     salePriceCents: product.sale_price_cents,
-    stock: product.stock,
     variations,
     productImages,
     descriptionImages,

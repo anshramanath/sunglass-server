@@ -139,7 +139,6 @@ Full product detail including variations, all images, and description images.
   "minPriceCents": 1650,
   "maxPriceCents": 1995,
   "salePriceCents": null,
-  "stock": 10,
   "variations": [
     {
       "id": "uuid",
@@ -148,7 +147,6 @@ Full product detail including variations, all images, and description images.
       "sale": false,
       "regularPriceCents": 1650,
       "salePriceCents": null,
-      "stock": 5,
       "images": [{ "src": "https://...", "name": "Black Front", "sortOrder": 1 }]
     }
   ],
