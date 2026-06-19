@@ -56,19 +56,23 @@ export async function GET(req: NextRequest) {
     featured: p.featured,
     sale: p.sale,
     images: p.product_images.map((img: { src: string; name: string }) => ({ src: img.src, name: img.name })),
-    variations: (p.variations ?? []).map((v: { id: string; sale: boolean; regular_price_cents: number; sale_price_cents: number | null; attribute: RawAttr[]; variation_images: { src: string; name: string; sort_order: number }[] }) => ({
-      id: v.id,
-      sale: v.sale,
-      regularPriceCents: v.regular_price_cents,
-      salePriceCents: v.sale_price_cents,
-      attribute: v.attribute.filter((a) => a.name === "color").map((a) => ({
-        name: a.name,
-        option: a.option,
-        slug: a.slug,
-        ...(a.value !== undefined ? { value: a.value } : {}),
-      })),
-      imageSrc: v.variation_images[0]?.src ?? null,
-    })),
+    variations: (() => {
+      const seen = new Set<string>();
+      return (p.variations ?? []).reduce((acc: { id: string; sale: boolean; regularPriceCents: number; salePriceCents: number | null; attribute: { name: string; option: string; slug: string; value?: string }[]; imageSrc: string | null }[], v: { id: string; sale: boolean; regular_price_cents: number; sale_price_cents: number | null; attribute: RawAttr[]; variation_images: { src: string; name: string; sort_order: number }[] }) => {
+        const color = v.attribute.find((a) => a.name === "color");
+        if (!color || seen.has(color.slug)) return acc;
+        seen.add(color.slug);
+        acc.push({
+          id: v.id,
+          sale: v.sale,
+          regularPriceCents: v.regular_price_cents,
+          salePriceCents: v.sale_price_cents,
+          attribute: [{ name: color.name, option: color.option, slug: color.slug, ...(color.value !== undefined ? { value: color.value } : {}) }],
+          imageSrc: v.variation_images[0]?.src ?? null,
+        });
+        return acc;
+      }, []);
+    })(),
   }));
 
   return ok({ products, page, size, totalPages, totalProducts, hasNextPage: page < totalPages, hasPreviousPage: page > 1 }, 200);
