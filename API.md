@@ -19,7 +19,7 @@ Returns all brands.
 **Response**
 ```json
 [
-  { "id": "uuid", "name": "Sunglass Monster", "slug": "sunglass-monster" }
+  { "name": "BikerShades", "slug": "bikershades" }
 ]
 ```
 
@@ -27,7 +27,7 @@ Returns all brands.
 
 ### GET /api/public/categories
 
-Returns the full category tree for a brand. `sortOrder` is the authoritative ordering field.
+Returns the full category tree for a brand, sorted by `sortOrder` at every level.
 
 **Query Params**
 | Param | Required | Description |
@@ -43,7 +43,7 @@ Returns the full category tree for a brand. `sortOrder` is the authoritative ord
     "slug": "sunglasses",
     "sortOrder": 1,
     "children": [
-      { "id": "uuid", "name": "Sport", "slug": "sport", "sortOrder": 1, "children": [] }
+      { "id": "uuid", "name": "Sport", "slug": "sport", "sortOrder": 1 }
     ]
   }
 ]
@@ -53,13 +53,13 @@ Returns the full category tree for a brand. `sortOrder` is the authoritative ord
 
 ### GET /api/public/products
 
-Paginated products for a leaf category. Default page size is 20.
+Paginated products for a category, sorted by name. Default page size is 20. Returns one product image and one image per unique color variation.
 
 **Query Params**
 | Param | Required | Default | Description |
 |-------|----------|---------|-------------|
 | brandSlug | yes | — | Brand slug |
-| categoryId | yes | — | Leaf category UUID |
+| categoryId | yes | — | Category UUID |
 | filter | no | — | Filter slug (see below) |
 | page | no | 1 | Page number |
 | size | no | 20 | Results per page (max 100) |
@@ -68,7 +68,7 @@ Paginated products for a leaf category. Default page size is 20.
 | Slug | Effect |
 |------|--------|
 | `under-15` | `min_price_cents < 1500` |
-| `15-25` | `1500 ≤ min_price_cents < 2500` |
+| `15-25` | `1500 ≤ min_price_cents ≤ 2500` |
 | `25-plus` | `min_price_cents ≥ 2500` |
 | `sale` | `sale = true` |
 
@@ -85,16 +85,15 @@ Paginated products for a leaf category. Default page size is 20.
       "salePriceCents": null,
       "featured": false,
       "sale": false,
-      "images": [{ "src": "https://...", "name": "Front" }],
+      "imageSrc": "https://...",
+      "imageName": "Sport Sunglasses Front",
       "variations": [
         {
-          "sale": false,
-          "regularPriceCents": 1650,
-          "salePriceCents": null,
-          "attribute": [
-            { "name": "color", "option": "Gloss Black", "slug": "gloss-black", "value": "#000000" }
-          ],
-          "imageSrc": "https://..."
+          "option": "Gloss Black",
+          "slug": "gloss-black",
+          "value": "#000000",
+          "imageSrc": "https://...",
+          "imageName": "Gloss Black Angle"
         }
       ]
     }
@@ -103,8 +102,7 @@ Paginated products for a leaf category. Default page size is 20.
   "size": 20,
   "totalPages": 3,
   "totalProducts": 62,
-  "hasNextPage": true,
-  "hasPreviousPage": false
+  "hasNextPage": true
 }
 ```
 
@@ -112,7 +110,7 @@ Paginated products for a leaf category. Default page size is 20.
 
 ### GET /api/public/sale
 
-Paginated sale products (`sale = true`). No `sale` filter slug — the endpoint is already scoped to sale items.
+Paginated sale products (`sale = true`). Same response shape as `/products` except `sale` field is omitted (implied). No `sale` filter slug needed.
 
 **Query Params**
 | Param | Required | Default | Description |
@@ -122,13 +120,13 @@ Paginated sale products (`sale = true`). No `sale` filter slug — the endpoint 
 | page | no | 1 | Page number |
 | size | no | 20 | Results per page (max 100) |
 
-**Response** — same shape as `/products`
+**Response** — same shape as `/products` without the `sale` field on each product.
 
 ---
 
 ### GET /api/public/item
 
-Full product detail including variations, all images, and description images.
+Full product detail including all variations, all images, and description images.
 
 **Query Params**
 | Param | Required | Description |
@@ -144,7 +142,22 @@ Full product detail including variations, all images, and description images.
   "sku": null,
   "description": "Full description...",
   "summary": ["Feature 1", "Feature 2"],
-  "attributes": [{ "name": "Color", "options": ["Black", "Tortoise"] }],
+  "attributes": [
+    {
+      "name": "color",
+      "options": [
+        { "option": "Gloss Black", "slug": "gloss-black", "value": "#000000" },
+        { "option": "Tortoise", "slug": "tortoise", "value": "#8b4513" }
+      ]
+    },
+    {
+      "name": "size",
+      "options": [
+        { "option": "Standard", "slug": "standard" },
+        { "option": "Large", "slug": "large" }
+      ]
+    }
+  ],
   "featured": false,
   "sale": false,
   "minPriceCents": 1650,
@@ -153,8 +166,11 @@ Full product detail including variations, all images, and description images.
   "variations": [
     {
       "id": "uuid",
-      "sku": "SKU-BLK",
-      "attribute": [{ "name": "Color", "option": "Black" }],
+      "sku": "SKU-BLK-STD",
+      "attribute": [
+        { "name": "color", "option": "Gloss Black", "slug": "gloss-black", "value": "#000000" },
+        { "name": "size", "option": "Standard", "slug": "standard" }
+      ],
       "sale": false,
       "regularPriceCents": 1650,
       "salePriceCents": null,
@@ -165,6 +181,8 @@ Full product detail including variations, all images, and description images.
   "descriptionImages": [{ "src": "https://...", "name": "Diagram" }]
 }
 ```
+
+Note: `value` is only present on `color` attributes. All other attributes omit it.
 
 ---
 
@@ -246,7 +264,7 @@ Returns the user's cart items for a brand.
     {
       "productSlug": "sport-sunglasses",
       "sku": "SKU-BLK",
-      "attribute": [{ "name": "Color", "option": "Black" }],
+      "attribute": [{ "name": "color", "option": "Gloss Black" }],
       "name": "Sport Sunglasses",
       "imageSrc": "https://...",
       "priceCents": 1650,
@@ -270,7 +288,7 @@ Replaces the user's cart for a brand (delete + insert). Pass an empty array to c
     {
       "productSlug": "sport-sunglasses",
       "sku": "SKU-BLK",
-      "attribute": [{ "name": "Color", "option": "Black" }],
+      "attribute": [{ "name": "color", "option": "Gloss Black" }],
       "name": "Sport Sunglasses",
       "imageSrc": "https://...",
       "priceCents": 1650,
@@ -371,7 +389,7 @@ Returns the user's order history for a brand, newest first.
           "imageSrc": "https://...",
           "priceCents": 1650,
           "quantity": 2,
-          "attribute": [{ "name": "Color", "option": "Black" }]
+          "attribute": [{ "name": "color", "option": "Gloss Black" }]
         }
       ]
     }
@@ -383,7 +401,7 @@ Returns the user's order history for a brand, newest first.
 
 ### POST /api/user/checkout
 
-Creates a Stripe checkout session for the user's cart. Returns a URL to redirect the user to Stripe. Stripe collects the shipping address as part of the checkout flow. Idempotent — same cart and order count returns the same session URL.
+Creates a Stripe checkout session. Returns a redirect URL. Stripe collects the shipping address as part of the flow — no need to collect it on the frontend. Idempotent — same cart and order count returns the same session URL.
 
 **Body**
 ```json
@@ -397,7 +415,7 @@ Creates a Stripe checkout session for the user's cart. Returns a URL to redirect
       "imageSrc": "https://...",
       "priceCents": 1650,
       "quantity": 2,
-      "attribute": [{ "name": "Color", "option": "Black" }]
+      "attribute": [{ "name": "color", "option": "Gloss Black" }]
     }
   ],
   "successUrl": "https://yourdomain.com/order/success",
@@ -418,4 +436,4 @@ Creates a Stripe checkout session for the user's cart. Returns a URL to redirect
 
 Stripe webhook handler. Verified via `stripe-signature` header. Only handles `checkout.session.completed`.
 
-On payment completion: inserts an `orders` row and `order_items` rows derived from the Stripe line items, then atomically increments `total_sales` on the relevant product or variation. Idempotent — duplicate deliveries are ignored via `stripe_session_id` unique constraint.
+On payment completion: inserts an `orders` row and `order_items` rows, stores the shipping address collected by Stripe, then atomically increments `total_sales` on the relevant product or variation. Idempotent — duplicate deliveries are ignored via `stripe_session_id` unique constraint.
