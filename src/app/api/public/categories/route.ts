@@ -39,5 +39,14 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  function sortTree(nodes: CategoryNode[]) {
+    nodes.sort((a, b) => a.sortOrder - b.sortOrder);
+    for (const node of nodes) {
+      if (node.children) sortTree(node.children);
+    }
+  }
+
+  sortTree(roots);
+
   return ok(roots, 200);
 }

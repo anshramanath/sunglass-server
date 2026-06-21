@@ -6,8 +6,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("brands")
-    .select("id, name, slug")
-    .order("name");
+    .select("name, slug");
 
   if (error) return err("Failed to fetch brands!", 500);
 
