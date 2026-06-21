@@ -1,74 +1,57 @@
-# sunglass-monster-server
+# sunglass-server
 
-Next.js API server for the proSPORT multi-brand sunglasses platform. Serves product catalog, search, and authenticated user data (cart + bookmarks) to a separate frontend deployment.
+Next.js API server for a multi-brand sunglasses e-commerce platform. API routes only — no frontend. Multiple storefronts share one codebase and database, scoped by `brand_slug`.
 
-## Stack
+**Stack:** Next.js 16 · Supabase (Postgres + RLS) · Stripe · TypeScript
 
-- **Next.js 16** — API routes only, no frontend pages
-- **Supabase** — Postgres database, auth token verification
-- **Admin client** — for public catalog reads (bypasses RLS)
-- **User client** — for authed endpoints (validates Bearer token, respects RLS)
+---
 
-## Getting Started
-
-```bash
-npm install
-npm run dev
-```
-
-Server runs at `http://localhost:3000`.
-
-## Environment Variables
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-SUPABASE_SERVICE_ROLE_KEY=...   # admin client — server only
-```
-
-## API Overview
+## Endpoints
 
 All endpoints return:
 ```json
-{ "success": true,  "data": { ... } }
-{ "success": false, "error": "Message" }
+{ "success": true,  "data": { ... } }   // 2xx
+{ "success": false, "error": "Message" } // 4xx / 5xx
 ```
 
-### Public Endpoints — no auth required
+### Public
 
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/public/brands` | All brands |
-| GET | `/api/public/categories?brandSlug=` | Category tree for a brand |
-| GET | `/api/public/products?brandSlug=&categoryId=&filter=&page=&size=` | Paginated products for a leaf category |
-| GET | `/api/public/sale?brandSlug=&filter=&page=&size=` | Paginated sale products |
-| GET | `/api/public/item?brandSlug=&productId=` | Full product detail |
-| GET | `/api/public/search?brandSlug=&q=` | Product name search (up to 6 results) |
+| GET | `/api/public/categories` | Full category tree, recursively sorted |
+| GET | `/api/public/products` | Paginated products by category, unique color swatches |
+| GET | `/api/public/sale` | Paginated sale products |
+| GET | `/api/public/item` | Full product detail, all variations and images |
+| GET | `/api/public/search` | Product name search, up to 6 results |
+| POST | `/api/public/validate-cart` | Check cart items still exist before checkout |
 
-#### Filter slugs (`/products` and `/sale`)
-| Slug | Effect |
-|------|--------|
-| `under-15` | `min_price_cents < 1500` |
-| `15-25` | `1500 ≤ min_price_cents < 2500` |
-| `25-plus` | `min_price_cents ≥ 2500` |
-| `sale` | `sale = true` (products only) |
+Price filters (`under-15`, `15-25`, `25-plus`, `sale`) are resolved server-side — never in the URL.
 
-Filters are resolved server-side via a hardcoded `FILTER_MAP` — price logic is never exposed in the URL.
-
-### Authenticated Endpoints — Bearer token required
+### Authenticated — `Authorization: Bearer <token>`
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/user/cart?brandSlug=` | Fetch cart items for a brand |
-| PUT | `/api/user/cart` | Replace cart items for a brand (full sync) |
-| GET | `/api/user/bookmarks?brandSlug=` | Fetch bookmarks for a brand |
-| PUT | `/api/user/bookmarks` | Replace bookmarks for a brand (full sync) |
+| GET | `/api/user/cart` | Fetch cart |
+| PUT | `/api/user/cart` | Replace cart (full sync) |
+| GET | `/api/user/bookmarks` | Fetch bookmarks |
+| PUT | `/api/user/bookmarks` | Replace bookmarks (full sync) |
+| GET | `/api/user/orders` | Order history with shipping address and line items |
+| POST | `/api/user/checkout` | Create Stripe checkout session |
 
-Auth: `Authorization: Bearer <supabase_access_token>`. The user client validates the token against Supabase and all queries are scoped to `user_id` + `brand_slug` via RLS.
+Token is validated by Supabase. RLS enforces that users only access their own rows.
 
-Cart and bookmark PUT is a full replace (delete + insert) scoped to the brand — not a patch. The frontend handles merging before calling PUT.
+### Webhooks
 
-## Project Structure
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/webhooks/stripe` | Handle `checkout.session.completed` |
+
+Creates the order, stores Stripe-collected shipping address, increments `total_sales` via Postgres RPC. Idempotent via unique constraint on `stripe_session_id`.
+
+---
+
+## Structure
 
 ```
 src/
@@ -76,40 +59,26 @@ src/
 │   ├── public/
 │   │   ├── brands/route.ts
 │   │   ├── categories/route.ts
-│   │   ├── products/route.ts      # categoryId required, optional filter
-│   │   ├── sale/route.ts          # always sale=true, optional price filter
+│   │   ├── products/route.ts
+│   │   ├── sale/route.ts
 │   │   ├── item/route.ts
-│   │   └── search/route.ts        # ilike name search, limit 6
-│   └── user/
-│       ├── cart/route.ts
-│       └── bookmarks/route.ts
+│   │   ├── search/route.ts
+│   │   └── validate-cart/route.ts
+│   ├── user/
+│   │   ├── cart/route.ts
+│   │   ├── bookmarks/route.ts
+│   │   ├── orders/route.ts
+│   │   └── checkout/route.ts
+│   └── webhooks/stripe/route.ts
 └── lib/
-    ├── api.ts                     # ok() / err() response helpers
+    ├── api.ts                        # ok() / err() response helpers
+    ├── stripe.ts                     # Stripe client singleton
     ├── supabase/
-    │   ├── admin.ts               # Service role client (public catalog)
-    │   └── user.ts                # User client from Bearer token (authed endpoints)
+    │   ├── admin.ts                  # service role client — bypasses RLS
+    │   └── user.ts                   # Bearer token client — respects RLS
     └── db/
-        ├── 001_initial_schema.sql      # Full current schema
-        ├── 002_user_cart_bookmarks.sql # Historical — cart and bookmarks initial migration
-        └── drop_schema.sql
+        ├── 001_initial_schema.sql    # source of truth — full schema + RLS policies
+        ├── 002_user_cart_bookmarks.sql
+        ├── 003_orders.sql
+        └── drop_schema.sql           # dev only
 ```
-
-## Database
-
-Schema is in `src/lib/db/001_initial_schema.sql`. Apply it to a fresh database to get the full schema including RLS policies.
-
-Key tables: `brands`, `categories`, `products`, `product_variations`, `product_images`, `cart_items`, `bookmarks`.
-
-### Brand scoping
-All tables use `brand_slug text references brands(slug) on delete cascade` rather than a `brand_id` UUID. This means:
-- Queries filter directly by `brand_slug` — no intermediate brand lookup needed
-- Deleting a brand cascades to all related rows across every table
-- Invalid brand slugs are rejected by the FK constraint
-
-### Unique constraints
-- `products`: `unique(brand_slug, slug)` and `unique(brand_slug, name)` — slugs and names must be unique within a brand but can collide across brands
-- `description_images`: `unique(brand_slug, src)`
-- `bookmarks`: `unique(user_id, brand_slug, product_slug)`
-
-### RLS
-`cart_items` and `bookmarks` have RLS enabled — rows are scoped to `auth.uid()`. The authenticated Supabase client enforces this automatically.
