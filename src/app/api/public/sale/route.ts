@@ -30,7 +30,13 @@ export async function GET(req: NextRequest) {
 
   let q = supabase
     .from("products")
-    .select("id, name, slug, featured, min_price_cents, max_price_cents, sale_price_cents, product_images!inner(src, name, sort_order), variations(attribute, variation_images(src, name, sort_order))", { count: "exact" })
+    .select(`
+      id, name, slug, featured, min_price_cents, max_price_cents, sale_price_cents,
+      product_images!inner(src, name, sort_order),
+      variations(attribute,
+        variation_images(src, name, sort_order)
+      )
+    `, { count: "exact" })
     .eq("brand_slug", brandSlug)
     .eq("sale", true);
 

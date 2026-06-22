@@ -34,7 +34,14 @@ export async function GET(req: NextRequest) {
 
   let q = supabase
     .from("products")
-    .select("id, name, slug, featured, sale, min_price_cents, max_price_cents, sale_price_cents, product_categories!inner(category_id), product_images!inner(src, name, sort_order), variations(attribute, variation_images(src, name, sort_order))", { count: "exact" })
+    .select(`
+      id, name, slug, featured, sale, min_price_cents, max_price_cents, sale_price_cents,
+      product_categories!inner(category_id),
+      product_images!inner(src, name, sort_order),
+      variations(attribute,
+        variation_images(src, name, sort_order)
+      )
+    `, { count: "exact" })
     .eq("brand_slug", brandSlug)
     .eq("product_categories.category_id", categoryId);
 
@@ -42,7 +49,7 @@ export async function GET(req: NextRequest) {
   if (activeFilter?.minPrice !== undefined) q = q.gte("min_price_cents", activeFilter.minPrice);
   if (activeFilter?.maxPrice !== undefined) q = q.lte("min_price_cents", activeFilter.maxPrice);
 
-  const { data, count, error } = await q.order("name", { ascending: true }).range(from, to);
+  const { data, count, error } = await q.range(from, to);
 
   if (error) return err("Failed to fetch products", 500);
 

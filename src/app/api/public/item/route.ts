@@ -2,18 +2,23 @@ import { NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ok, err } from "@/lib/api";
 
+type RawAttr = { name: string; option: string; slug: string; value?: string };
+type RawAttrOption = { option: string; slug: string; value?: string };
+type RawImage = { src: string; name: string; sort_order: number };
+
 export async function GET(req: NextRequest) {
-  const slug = req.nextUrl.searchParams.get("slug");
   const brandSlug = req.nextUrl.searchParams.get("brandSlug");
-  if (!slug) return err("Product slug is required!", 400);
   if (!brandSlug) return err("Brand slug is required!", 400);
+
+  const slug = req.nextUrl.searchParams.get("slug");
+  if (!slug) return err("Product slug is required!", 400);
 
   const supabase = createAdminClient();
 
   const { data: product, error } = await supabase
     .from("products")
     .select(`
-      id, name, sku, description, summary, attributes, featured,
+      id, name, slug, sku, description, summary, attributes, featured,
       sale, min_price_cents, max_price_cents, sale_price_cents,
       variations(id, sku, attribute, sale, regular_price_cents, sale_price_cents,
         variation_images(src, name, sort_order)
@@ -29,8 +34,6 @@ export async function GET(req: NextRequest) {
 
   if (error || !product) return err("Product not found!", 404);
 
-  type RawAttr = { name: string; option: string; slug: string; value?: string };
-
   const variations = (product.variations ?? []).map((v) => ({
     id: v.id,
     sku: v.sku,
@@ -43,28 +46,31 @@ export async function GET(req: NextRequest) {
     sale: v.sale,
     regularPriceCents: v.regular_price_cents,
     salePriceCents: v.sale_price_cents,
-    images: (v.variation_images ?? []).map((img) => ({ src: img.src, name: img.name, sortOrder: img.sort_order })),
+    images: (v.variation_images as RawImage[]).sort((a, b) => a.sort_order - b.sort_order).map((img) => ({ src: img.src, name: img.name, sortOrder: img.sort_order })),
   }));
 
-  const productImages = (product.product_images ?? []).map((img) => ({ src: img.src, name: img.name, sortOrder: img.sort_order }));
+  const productImages = (product.product_images as RawImage[]).sort((a, b) => a.sort_order - b.sort_order).map((img) => ({ src: img.src, name: img.name, sortOrder: img.sort_order }));
 
   const descriptionImages = (product.product_description_images ?? [])
     .flatMap((r) => r.description_images);
 
-  return ok({
+  const attributes = (product.attributes as { name: string; options: RawAttrOption[] }[]).map((attr) => ({
+    name: attr.name,
+    options: attr.options.map((opt) => ({
+      option: opt.option,
+      slug: opt.slug,
+      ...(opt.value !== undefined ? { value: opt.value } : {}),
+    })),
+  }));
+
+  const item = {
     id: product.id,
     name: product.name,
+    slug: product.slug,
     sku: product.sku,
     description: product.description,
     summary: product.summary,
-    attributes: (product.attributes as { name: string; options: { option: string; slug: string; value?: string }[] }[]).map((attr) => ({
-      name: attr.name,
-      options: attr.options.map((opt) => ({
-        option: opt.option,
-        slug: opt.slug,
-        ...(opt.value !== undefined ? { value: opt.value } : {}),
-      })),
-    })),
+    attributes,
     featured: product.featured,
     sale: product.sale,
     minPriceCents: product.min_price_cents,
@@ -73,5 +79,7 @@ export async function GET(req: NextRequest) {
     variations,
     productImages,
     descriptionImages,
-  }, 200);
+  };
+
+  return ok(item, 200);
 }
