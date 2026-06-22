@@ -89,6 +89,7 @@ Paginated products for a category, sorted by name. Default page size is 20. Retu
       "imageName": "Sport Sunglasses Front",
       "variations": [
         {
+          "id": "uuid",
           "option": "Gloss Black",
           "slug": "gloss-black",
           "value": "#000000",
@@ -137,7 +138,6 @@ Full product detail including all variations, all images, and description images
 **Response**
 ```json
 {
-  "id": "uuid",
   "name": "Sport Sunglasses",
   "sku": null,
   "description": "Full description...",
@@ -165,11 +165,10 @@ Full product detail including all variations, all images, and description images
   "salePriceCents": null,
   "variations": [
     {
-      "id": "uuid",
       "sku": "SKU-BLK-STD",
       "attribute": [
-        { "name": "color", "option": "Gloss Black", "slug": "gloss-black", "value": "#000000" },
-        { "name": "size", "option": "Standard", "slug": "standard" }
+        { "name": "color", "slug": "gloss-black" },
+        { "name": "size", "slug": "standard" }
       ],
       "sale": false,
       "regularPriceCents": 1650,
@@ -182,7 +181,7 @@ Full product detail including all variations, all images, and description images
 }
 ```
 
-Note: `value` is only present on `color` attributes. All other attributes omit it.
+Note: variation `attribute` entries are `{ name, slug }` only — use the top-level `attributes` to look up display labels and hex values by slug. `value` is only present on `color` options there.
 
 ---
 

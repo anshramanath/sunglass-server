@@ -4,7 +4,7 @@ import { ok, err } from "@/lib/api";
 
 type RawAttribute = { name: string; option: string; slug: string; value?: string };
 type RawImage = { src: string; name: string; sort_order: number };
-type RawVariation = { attribute: RawAttribute[]; variation_images: RawImage[] };
+type RawVariation = { id: string; attribute: RawAttribute[]; variation_images: RawImage[] };
 
 const FILTER_MAP: Record<string, { sale?: boolean; minPrice?: number; maxPrice?: number }> = {
   "under-15": { maxPrice: 1500 },
@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
       products!inner(
         id, name, slug, featured, sale, min_price_cents, max_price_cents, sale_price_cents,
         product_images!inner(src, name, sort_order),
-        variations(attribute,
+        variations(id, attribute,
           variation_images(src, name, sort_order)
         )
       )
@@ -61,12 +61,13 @@ export async function GET(req: NextRequest) {
     const firstImage = (p.product_images as RawImage[]).sort((a, b) => a.sort_order - b.sort_order)[0];
 
     const seen = new Set<string>();
-    const variations = (p.variations ?? []).reduce((acc: { option: string; slug: string; value?: string; imageSrc: string | null; imageName: string | null }[], v: RawVariation) => {
+    const variations = (p.variations ?? []).reduce((acc: { id: string; option: string; slug: string; value?: string; imageSrc: string | null; imageName: string | null }[], v: RawVariation) => {
       const color = v.attribute.find((a) => a.name === "color");
       if (!color || seen.has(color.slug)) return acc;
       seen.add(color.slug);
       const firstImage = v.variation_images.sort((a, b) => a.sort_order - b.sort_order)[0];
       acc.push({
+        id: v.id,
         option: color.option,
         slug: color.slug,
         value: color.value,

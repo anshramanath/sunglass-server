@@ -18,9 +18,9 @@ export async function GET(req: NextRequest) {
   const { data: product, error } = await supabase
     .from("products")
     .select(`
-      id, name, slug, sku, description, summary, attributes, featured,
+      name, slug, sku, description, summary, attributes, featured,
       sale, min_price_cents, max_price_cents, sale_price_cents,
-      variations(id, sku, attribute, sale, regular_price_cents, sale_price_cents,
+      variations(sku, attribute, sale, regular_price_cents, sale_price_cents,
         variation_images(src, name, sort_order)
       ),
       product_images(src, name, sort_order),
@@ -35,14 +35,8 @@ export async function GET(req: NextRequest) {
   if (error || !product) return err("Product not found!", 404);
 
   const variations = (product.variations ?? []).map((v) => ({
-    id: v.id,
     sku: v.sku,
-    attribute: (v.attribute as RawAttr[]).map((a) => ({
-      name: a.name,
-      option: a.option,
-      slug: a.slug,
-      ...(a.value !== undefined ? { value: a.value } : {}),
-    })),
+    attribute: (v.attribute as RawAttr[]).map((a) => ({ name: a.name, slug: a.slug })),
     sale: v.sale,
     regularPriceCents: v.regular_price_cents,
     salePriceCents: v.sale_price_cents,
@@ -64,7 +58,6 @@ export async function GET(req: NextRequest) {
   }));
 
   const item = {
-    id: product.id,
     name: product.name,
     slug: product.slug,
     sku: product.sku,
