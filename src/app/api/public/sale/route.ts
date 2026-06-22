@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
   if (activeFilter?.minPrice !== undefined) q = q.gte("min_price_cents", activeFilter.minPrice);
   if (activeFilter?.maxPrice !== undefined) q = q.lte("min_price_cents", activeFilter.maxPrice);
 
-  const { data, count, error } = await q.range(from, to);
+  const { data, count, error } = await q.order("id", { ascending: true }).range(from, to);
 
   if (error) return err("Failed to fetch sale products", 500);
 

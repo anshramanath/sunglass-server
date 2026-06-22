@@ -33,30 +33,31 @@ export async function GET(req: NextRequest) {
   const supabase = createAdminClient();
 
   let q = supabase
-    .from("products")
+    .from("product_categories")
     .select(`
-      id, name, slug, featured, sale, min_price_cents, max_price_cents, sale_price_cents,
-      product_categories!inner(category_id),
-      product_images!inner(src, name, sort_order),
-      variations(attribute,
-        variation_images(src, name, sort_order)
+      products!inner(
+        id, name, slug, featured, sale, min_price_cents, max_price_cents, sale_price_cents,
+        product_images!inner(src, name, sort_order),
+        variations(attribute,
+          variation_images(src, name, sort_order)
+        )
       )
     `, { count: "exact" })
-    .eq("brand_slug", brandSlug)
-    .eq("product_categories.category_id", categoryId);
+    .eq("category_id", categoryId)
+    .eq("products.brand_slug", brandSlug);
 
-  if (activeFilter?.sale) q = q.eq("sale", true);
-  if (activeFilter?.minPrice !== undefined) q = q.gte("min_price_cents", activeFilter.minPrice);
-  if (activeFilter?.maxPrice !== undefined) q = q.lte("min_price_cents", activeFilter.maxPrice);
+  if (activeFilter?.sale) q = q.eq("products.sale", true);
+  if (activeFilter?.minPrice !== undefined) q = q.gte("products.min_price_cents", activeFilter.minPrice);
+  if (activeFilter?.maxPrice !== undefined) q = q.lte("products.min_price_cents", activeFilter.maxPrice);
 
-  const { data, count, error } = await q.range(from, to);
+  const { data, count, error } = await q.order("product_id", { ascending: true }).range(from, to);
 
   if (error) return err("Failed to fetch products", 500);
 
   const totalProducts = count ?? 0;
   const totalPages = Math.ceil(totalProducts / size);
 
-  const products = (data ?? []).map((p) => {
+  const products = (data ?? []).flatMap((r) => r.products ?? []).map((p) => {
     const firstImage = (p.product_images as RawImage[]).sort((a, b) => a.sort_order - b.sort_order)[0];
 
     const seen = new Set<string>();
