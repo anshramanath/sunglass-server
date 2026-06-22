@@ -193,26 +193,24 @@ Case-insensitive product name search. Returns up to 6 results.
 | Param | Required | Description |
 |-------|----------|-------------|
 | brandSlug | yes | Brand slug |
-| q | yes | Search query |
+| search | yes | Search query |
 
 **Response**
 ```json
-{
-  "items": [
-    {
-      "id": "uuid",
-      "name": "Sport Sunglasses",
-      "slug": "sport-sunglasses",
-      "minPriceCents": 1650,
-      "maxPriceCents": 1995,
-      "salePriceCents": null,
-      "attributes": [...],
-      "featured": false,
-      "sale": false,
-      "images": [{ "src": "https://...", "name": "Front" }]
-    }
-  ]
-}
+[
+  {
+    "id": "uuid",
+    "name": "Sport Sunglasses",
+    "slug": "sport-sunglasses",
+    "minPriceCents": 1650,
+    "maxPriceCents": 1995,
+    "salePriceCents": null,
+    "featured": false,
+    "sale": false,
+    "imageSrc": "https://...",
+    "imageName": "Sport Sunglasses Front"
+  }
+]
 ```
 
 ---
