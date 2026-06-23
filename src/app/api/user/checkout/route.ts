@@ -9,7 +9,6 @@ type CartItem = {
   sku: string;
   name: string;
   imageSrc: string;
-  priceCents: number;
   quantity: number;
   attribute: { name: string; option: string }[];
 };
@@ -38,6 +37,31 @@ export async function POST(req: NextRequest) {
   const userId = user.id;
   const email = user.email;
 
+  const slugs = (items as CartItem[]).map((i) => i.productSlug);
+
+  const { data: productRows } = await supabase
+    .from("products")
+    .select("slug, sku, sale, min_price_cents, sale_price_cents, variations(sku, sale, regular_price_cents, sale_price_cents)")
+    .eq("brand_slug", brandSlug)
+    .in("slug", slugs);
+
+  const priceMap = new Map<string, number>();
+  for (const p of productRows ?? []) {
+    if (p.sku) priceMap.set(`${p.slug}:${p.sku}`, p.sale ? p.sale_price_cents : p.min_price_cents);
+    for (const v of p.variations ?? []) priceMap.set(`${p.slug}:${v.sku}`, v.sale ? v.sale_price_cents : v.regular_price_cents);
+  }
+
+  const validation = (items as CartItem[]).map((item) => ({
+    productSlug: item.productSlug,
+    sku: item.sku,
+    exists: priceMap.has(`${item.productSlug}:${item.sku}`),
+    priceCents: priceMap.get(`${item.productSlug}:${item.sku}`) ?? null,
+  }));
+
+  if (validation.some((v) => !v.exists)) {
+    return ok(validation, 409);
+  }
+
   const { count } = await supabase
     .from("orders")
     .select("*", { count: "exact", head: true });
@@ -59,7 +83,7 @@ export async function POST(req: NextRequest) {
             description: item.sku,
             images: [item.imageSrc],
           },
-          unit_amount: item.priceCents,
+          unit_amount: priceMap.get(`${item.productSlug}:${item.sku}`)!,
         },
         quantity: item.quantity,
       })),

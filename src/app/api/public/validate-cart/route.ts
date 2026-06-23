@@ -20,23 +20,23 @@ export async function POST(req: NextRequest) {
 
   const { data: productRows } = await supabase
     .from("products")
-    .select("slug, sku, variations(sku)")
+    .select("slug, sku, sale, min_price_cents, sale_price_cents, variations(sku, sale, regular_price_cents, sale_price_cents)")
     .eq("brand_slug", brandSlug)
     .in("slug", slugs);
 
-  const productSkuMap = new Map<string, Set<string>>();
+  const priceMap = new Map<string, number>();
   for (const p of productRows ?? []) {
-    const validSkus = new Set<string>();
-    if (p.sku) validSkus.add(p.sku);
-    for (const v of p.variations ?? []) validSkus.add(v.sku);
-    productSkuMap.set(p.slug, validSkus);
+    if (p.sku) priceMap.set(`${p.slug}:${p.sku}`, p.sale ? p.sale_price_cents : p.min_price_cents);
+    for (const v of p.variations ?? []) priceMap.set(`${p.slug}:${v.sku}`, v.sale ? v.sale_price_cents : v.regular_price_cents);
   }
 
   const result = (items as CartItem[]).map((item) => ({
     productSlug: item.productSlug,
     sku: item.sku,
-    exists: productSkuMap.get(item.productSlug)?.has(item.sku) ?? false,
+    exists: priceMap.has(`${item.productSlug}:${item.sku}`),
+    priceCents: priceMap.get(`${item.productSlug}:${item.sku}`) ?? null,
   }));
 
-  return ok(result, 200);
+  const allExist = result.every((r) => r.exists);
+  return ok(result, allExist ? 200 : 409);
 }
