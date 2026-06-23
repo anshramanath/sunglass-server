@@ -8,11 +8,12 @@ export async function GET(req: NextRequest) {
 
   const client = await createUserClient(req);
   if (!client) return err("Unauthorized", 401);
+  
   const { supabase } = client;
 
   const { data, error } = await supabase
     .from("orders")
-    .select("id, status, total_cents, shipping_address, created_at, order_items(product_slug, sku, name, image_src, price_cents, quantity, attribute)")
+    .select("id, status, total_cents, shipping_address, created_at, order_items(id, product_slug, sku, name, image_src, price_cents, quantity, attribute)")
     .eq("brand_slug", brandSlug)
     .order("created_at", { ascending: false });
 
@@ -25,6 +26,7 @@ export async function GET(req: NextRequest) {
     shippingAddress: order.shipping_address,
     createdAt: order.created_at,
     items: (order.order_items ?? []).map((item) => ({
+      id: item.id,
       productSlug: item.product_slug,
       sku: item.sku,
       name: item.name,
@@ -35,5 +37,5 @@ export async function GET(req: NextRequest) {
     })),
   }));
 
-  return ok({ orders }, 200);
+  return ok(orders, 200);
 }
