@@ -8,16 +8,18 @@ export async function GET(req: NextRequest) {
 
   const client = await createUserClient(req);
   if (!client) return err("Unauthorized", 401);
+
   const { supabase } = client;
 
   const { data, error } = await supabase
     .from("cart_items")
-    .select("product_slug, sku, attribute, name, image_src, price_cents, quantity")
+    .select("product_id, product_slug, sku, attribute, name, image_src, price_cents, quantity")
     .eq("brand_slug", brandSlug);
 
   if (error) return err("Failed to fetch cart", 500);
 
-  const items = (data ?? []).map((row: { product_slug: string; sku: string; attribute: { name: string; option: string }[]; name: string; image_src: string; price_cents: number; quantity: number }) => ({
+  const items = (data ?? []).map((row) => ({
+    productId: row.product_id,
     productSlug: row.product_slug,
     sku: row.sku,
     attribute: row.attribute ?? [],
@@ -27,19 +29,22 @@ export async function GET(req: NextRequest) {
     quantity: row.quantity,
   }));
 
-  return ok({ items }, 200);
+  return ok(items, 200);
 }
 
 export async function PUT(req: NextRequest) {
   const body = await req.json();
-  const { brandSlug, items } = body;
+
+  const brandSlug = body.brandSlug;
   if (!brandSlug) return err("brandSlug is required", 400);
+
+  const items = body.items;
   if (!Array.isArray(items)) return err("items must be an array", 400);
 
   const client = await createUserClient(req);
   if (!client) return err("Unauthorized", 401);
+
   const { supabase, user } = client;
-  const userId = user.id;
 
   const { error: deleteError } = await supabase
     .from("cart_items")
@@ -50,6 +55,7 @@ export async function PUT(req: NextRequest) {
 
   if (items.length > 0) {
     const rows = items.map((item: {
+      productId: string;
       productSlug: string;
       sku: string;
       attribute: { name: string; option: string }[];
@@ -58,8 +64,9 @@ export async function PUT(req: NextRequest) {
       priceCents: number;
       quantity: number;
     }) => ({
-      user_id: userId,
+      user_id: user.id,
       brand_slug: brandSlug,
+      product_id: item.productId,
       product_slug: item.productSlug,
       sku: item.sku,
       attribute: item.attribute,
@@ -74,5 +81,6 @@ export async function PUT(req: NextRequest) {
     if (insertError) return err("Failed to sync cart", 500);
   }
 
-  return ok({ synced: items.length }, 200);
+  const result = { synced: items.length };
+  return ok(result, 200);
 }
