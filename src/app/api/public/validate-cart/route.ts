@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
 
   const items = body.items;
   if (!Array.isArray(items)) return err("items must be an array", 400);
-  if (items.length === 0) return ok({ items: [] }, 200);
+  if (items.length === 0) return ok([], 200);
 
   const slugs = (items as CartItem[]).map((i) => i.productSlug);
 

@@ -53,7 +53,7 @@ Returns the full category tree for a brand, sorted by `sortOrder` at every level
 
 ### GET /api/public/products
 
-Paginated products for a category, sorted by name. Default page size is 20. Returns one product image and one image per unique color variation.
+Paginated products for a category. Default page size is 20. Returns one product image and one image per unique color variation.
 
 **Query Params**
 | Param | Required | Default | Description |
@@ -67,7 +67,7 @@ Paginated products for a category, sorted by name. Default page size is 20. Retu
 **Filter slugs**
 | Slug | Effect |
 |------|--------|
-| `under-15` | `min_price_cents < 1500` |
+| `under-15` | `min_price_cents ≤ 1500` |
 | `15-25` | `1500 ≤ min_price_cents ≤ 2500` |
 | `25-plus` | `min_price_cents ≥ 2500` |
 | `sale` | `sale = true` |
@@ -139,6 +139,7 @@ Full product detail including all variations, all images, and description images
 ```json
 {
   "name": "Sport Sunglasses",
+  "slug": "sport-sunglasses",
   "sku": null,
   "description": "Full description...",
   "summary": ["Feature 1", "Feature 2"],
@@ -224,19 +225,17 @@ Checks whether each cart item's product and variation still exist in the catalog
 {
   "brandSlug": "sunglass-monster",
   "items": [
-    { "sku": "SKU-BLK", "productSlug": "sport-sunglasses" }
+    { "productSlug": "sport-sunglasses", "sku": "SKU-BLK" }
   ]
 }
 ```
 
 **Response**
 ```json
-{
-  "items": [
-    { "sku": "SKU-BLK", "productSlug": "sport-sunglasses", "exists": true },
-    { "sku": "SKU-OLD", "productSlug": "old-product", "exists": false }
-  ]
-}
+[
+  { "productSlug": "sport-sunglasses", "sku": "SKU-BLK", "exists": true },
+  { "productSlug": "old-product", "sku": "SKU-OLD", "exists": false }
+]
 ```
 
 ---
