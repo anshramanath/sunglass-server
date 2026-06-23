@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import crypto from "crypto";
 import { createUserClient } from "@/lib/supabase/user";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { stripe } from "@/lib/stripe";
 import { ok, err } from "@/lib/api";
 
@@ -30,16 +31,11 @@ export async function POST(req: NextRequest) {
   const { successUrl, cancelUrl } = body;
   if (!successUrl || !cancelUrl) return err("successUrl and cancelUrl are required", 400);
 
-  const client = await createUserClient(req);
-  if (!client) return err("Unauthorized", 401);
-  
-  const { supabase, user } = client;
-  const userId = user.id;
-  const email = user.email;
-
   const slugs = (items as CartItem[]).map((i) => i.productSlug);
 
-  const { data: productRows } = await supabase
+  const adminSupabase = createAdminClient();
+
+  const { data: productRows } = await adminSupabase
     .from("products")
     .select("slug, sku, sale, min_price_cents, sale_price_cents, variations(sku, sale, regular_price_cents, sale_price_cents)")
     .eq("brand_slug", brandSlug)
@@ -62,18 +58,23 @@ export async function POST(req: NextRequest) {
     return ok(validation, 409);
   }
 
-  const { count } = await supabase
+  const client = await createUserClient(req);
+  if (!client) return err("Unauthorized", 401);
+
+  const { supabase: userSupabase, user } = client;
+
+  const { count } = await userSupabase
     .from("orders")
     .select("*", { count: "exact", head: true });
 
   const orderCount = count ?? 0;
-  const idempotencyKey = `${userId}:${hashCart(items)}:${orderCount}`;
+  const idempotencyKey = `${user.id}:${hashCart(items)}:${orderCount}`;
 
   const session = await stripe.checkout.sessions.create(
     {
       mode: "payment",
-      client_reference_id: userId,
-      customer_email: email,
+      client_reference_id: user.id,
+      customer_email: user.email,
       metadata: { brandSlug },
       line_items: (items as CartItem[]).map((item) => ({
         price_data: {
