@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   const { data: product, error } = await supabase
     .from("products")
     .select(`
-      name, slug, sku, description, summary, attributes, featured,
+      id, name, slug, sku, description, summary, attributes, featured,
       sale, min_price_cents, max_price_cents, sale_price_cents,
       variations(sku, attribute, sale, regular_price_cents, sale_price_cents,
         variation_images(src, name, sort_order)
@@ -58,6 +58,7 @@ export async function GET(req: NextRequest) {
   }));
 
   const item = {
+    id: product.id,
     name: product.name,
     slug: product.slug,
     sku: product.sku,

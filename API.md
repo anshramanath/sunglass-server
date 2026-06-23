@@ -138,6 +138,7 @@ Full product detail including all variations, all images, and description images
 **Response**
 ```json
 {
+  "id": "uuid",
   "name": "Sport Sunglasses",
   "slug": "sport-sunglasses",
   "sku": null,
