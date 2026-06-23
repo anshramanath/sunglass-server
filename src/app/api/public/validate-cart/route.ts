@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ok, err } from "@/lib/api";
 
-type CartItem = { sku: string; productSlug: string };
+type CartItem = { sku: string; productSlug: string; priceCents: number };
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -30,13 +30,24 @@ export async function POST(req: NextRequest) {
     for (const v of p.variations ?? []) priceMap.set(`${p.slug}:${v.sku}`, v.sale ? v.sale_price_cents : v.regular_price_cents);
   }
 
-  const result = (items as CartItem[]).map((item) => ({
-    productSlug: item.productSlug,
-    sku: item.sku,
-    exists: priceMap.has(`${item.productSlug}:${item.sku}`),
-    priceCents: priceMap.get(`${item.productSlug}:${item.sku}`) ?? null,
-  }));
+  const result = (items as CartItem[]).map((item) => {
+    const dbPrice = priceMap.get(`${item.productSlug}:${item.sku}`) ?? null;
+    return {
+      productSlug: item.productSlug,
+      sku: item.sku,
+      exists: dbPrice !== null,
+      priceCents: dbPrice,
+      priceChanged: dbPrice !== null && dbPrice !== item.priceCents,
+    };
+  });
 
-  const allExist = result.every((r) => r.exists);
-  return ok(result, allExist ? 200 : 409);
+  const hasInvalid = result.some((r) => !r.exists);
+  const hasChangedPrice = result.some((r) => r.priceChanged);
+
+  const status = hasInvalid && hasChangedPrice ? 422
+    : hasInvalid ? 404
+    : hasChangedPrice ? 409
+    : 200;
+
+  return ok(result, status);
 }

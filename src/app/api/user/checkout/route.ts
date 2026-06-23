@@ -8,19 +8,31 @@ import { ok, err } from "@/lib/api";
 type CartItem = {
   productSlug: string;
   sku: string;
-  imageSrc: string;
+  priceCents: number;
   quantity: number;
-  attribute: { name: string; option: string }[];
 };
 
-type PriceEntry = { price: number; name: string };
+type Entry = {
+  priceCents: number;
+  name: string;
+  attribute: { name: string; option: string }[];
+  imageSrc: string;
+};
 
-function hashCart(items: CartItem[], priceMap: Map<string, PriceEntry>) {
+function hashCart(items: CartItem[], entryMap: Map<string, Entry>) {
   const sorted = [...items]
     .sort((a, b) => a.sku.localeCompare(b.sku))
     .map((i) => {
-      const entry = priceMap.get(`${i.productSlug}:${i.sku}`)!;
-      return { ...i, name: entry.name, priceCents: entry.price };
+      const entry = entryMap.get(`${i.productSlug}:${i.sku}`)!;
+      return {
+        productSlug: i.productSlug,
+        sku: i.sku,
+        quantity: i.quantity,
+        name: entry.name,
+        priceCents: entry.priceCents,
+        attribute: entry.attribute,
+        imageSrc: entry.imageSrc,
+      };
     });
   return crypto.createHash("sha256").update(JSON.stringify(sorted)).digest("hex").slice(0, 32);
 }
@@ -43,25 +55,60 @@ export async function POST(req: NextRequest) {
 
   const { data: productRows } = await adminSupabase
     .from("products")
-    .select("slug, name, sku, sale, min_price_cents, sale_price_cents, variations(sku, sale, regular_price_cents, sale_price_cents)")
+    .select(`
+      slug, name, sku, sale, min_price_cents, sale_price_cents,
+      product_images(src, sort_order),
+      variations(sku, sale, regular_price_cents, sale_price_cents, attribute,
+        variation_images(src, sort_order)
+      )
+    `)
     .eq("brand_slug", brandSlug)
     .in("slug", slugs);
 
-  const priceMap = new Map<string, PriceEntry>();
+  const entryMap = new Map<string, Entry>();
   for (const p of productRows ?? []) {
-    if (p.sku) priceMap.set(`${p.slug}:${p.sku}`, { price: p.sale ? p.sale_price_cents : p.min_price_cents, name: p.name });
-    for (const v of p.variations ?? []) priceMap.set(`${p.slug}:${v.sku}`, { price: v.sale ? v.sale_price_cents : v.regular_price_cents, name: p.name });
+    const productImage = (p.product_images as { src: string; sort_order: number }[])
+      .sort((a, b) => a.sort_order - b.sort_order)[0].src;
+
+    if (p.sku) {
+      entryMap.set(`${p.slug}:${p.sku}`, {
+        priceCents: p.sale ? p.sale_price_cents : p.min_price_cents,
+        name: p.name,
+        attribute: [],
+        imageSrc: productImage,
+      });
+    }
+
+    for (const v of p.variations ?? []) {
+      const variationImage = (v.variation_images as { src: string; sort_order: number }[])
+        .sort((a, b) => a.sort_order - b.sort_order)[0]?.src;
+
+      entryMap.set(`${p.slug}:${v.sku}`, {
+        priceCents: v.sale ? v.sale_price_cents : v.regular_price_cents,
+        name: p.name,
+        attribute: v.attribute as { name: string; option: string }[],
+        imageSrc: variationImage ?? productImage,
+      });
+    }
   }
 
-  const validation = (items as CartItem[]).map((item) => ({
-    productSlug: item.productSlug,
-    sku: item.sku,
-    exists: priceMap.has(`${item.productSlug}:${item.sku}`),
-    priceCents: priceMap.get(`${item.productSlug}:${item.sku}`)?.price ?? null,
-  }));
+  const validation = (items as CartItem[]).map((item) => {
+    const entry = entryMap.get(`${item.productSlug}:${item.sku}`) ?? null;
+    return {
+      productSlug: item.productSlug,
+      sku: item.sku,
+      exists: entry !== null,
+      priceCents: entry?.priceCents ?? null,
+      priceChanged: entry !== null && entry.priceCents !== item.priceCents,
+    };
+  });
 
-  if (validation.some((v) => !v.exists)) {
-    return ok(validation, 409);
+  const hasInvalid = validation.some((v) => !v.exists);
+  const hasChangedPrice = validation.some((v) => v.priceChanged);
+
+  if (hasInvalid || hasChangedPrice) {
+    const status = hasInvalid && hasChangedPrice ? 422 : hasInvalid ? 404 : 409;
+    return ok(validation, status);
   }
 
   const client = await createUserClient(req);
@@ -74,7 +121,7 @@ export async function POST(req: NextRequest) {
     .select("*", { count: "exact", head: true });
 
   const orderCount = count ?? 0;
-  const idempotencyKey = `${user.id}:${hashCart(items, priceMap)}:${orderCount}`;
+  const idempotencyKey = `${user.id}:${hashCart(items, entryMap)}:${orderCount}`;
 
   const session = await stripe.checkout.sessions.create(
     {
@@ -83,16 +130,16 @@ export async function POST(req: NextRequest) {
       customer_email: user.email,
       metadata: { brandSlug },
       line_items: (items as CartItem[]).map((item) => {
-        const entry = priceMap.get(`${item.productSlug}:${item.sku}`)!;
+        const entry = entryMap.get(`${item.productSlug}:${item.sku}`)!;
         return {
           price_data: {
             currency: "usd",
             product_data: {
-              name: `${entry.name} — ${item.attribute.map((a) => a.option).join(" / ")}`,
+              name: `${entry.name} — ${entry.attribute.map((a) => a.option).join(" / ")}`,
               description: item.sku,
-              images: [item.imageSrc],
+              images: [entry.imageSrc],
             },
-            unit_amount: entry.price,
+            unit_amount: entry.priceCents,
           },
           quantity: item.quantity,
         };
