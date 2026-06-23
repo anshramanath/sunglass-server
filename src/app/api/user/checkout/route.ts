@@ -14,8 +14,10 @@ type CartItem = {
   attribute: { name: string; option: string }[];
 };
 
-function hashCart(items: CartItem[]) {
-  const sorted = [...items].sort((a, b) => a.sku.localeCompare(b.sku));
+function hashCart(items: CartItem[], priceMap: Map<string, number>) {
+  const sorted = [...items]
+    .sort((a, b) => a.sku.localeCompare(b.sku))
+    .map((i) => ({ ...i, priceCents: priceMap.get(`${i.productSlug}:${i.sku}`) }));
   return crypto.createHash("sha256").update(JSON.stringify(sorted)).digest("hex").slice(0, 32);
 }
 
@@ -68,7 +70,7 @@ export async function POST(req: NextRequest) {
     .select("*", { count: "exact", head: true });
 
   const orderCount = count ?? 0;
-  const idempotencyKey = `${user.id}:${hashCart(items)}:${orderCount}`;
+  const idempotencyKey = `${user.id}:${hashCart(items, priceMap)}:${orderCount}`;
 
   const session = await stripe.checkout.sessions.create(
     {
