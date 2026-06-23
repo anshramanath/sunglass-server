@@ -10,8 +10,8 @@ export async function GET(req: NextRequest) {
   const brandSlug = req.nextUrl.searchParams.get("brandSlug");
   if (!brandSlug) return err("Brand slug is required!", 400);
 
-  const slug = req.nextUrl.searchParams.get("slug");
-  if (!slug) return err("Product slug is required!", 400);
+  const slug = req.nextUrl.searchParams.get("productSlug");
+  if (!slug) return err("productSlug is required!", 400);
 
   const supabase = createAdminClient();
 

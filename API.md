@@ -133,7 +133,7 @@ Full product detail including all variations, all images, and description images
 | Param | Required | Description |
 |-------|----------|-------------|
 | brandSlug | yes | Brand slug |
-| slug | yes | Product slug |
+| productSlug | yes | Product slug |
 
 **Response**
 ```json
