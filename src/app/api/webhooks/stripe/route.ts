@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       brand_slug: brandSlug,
       stripe_session_id: session.id,
       stripe_payment_intent: typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id,
-      status: "paid",
+      status: "processing",
       total_cents: session.amount_total!,
       shipping_address: {
         name: session.collected_information!.shipping_details!.name,
