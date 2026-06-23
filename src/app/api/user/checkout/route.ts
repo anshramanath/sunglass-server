@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
           price_data: {
             currency: "usd",
             product_data: {
-              name: `${entry.name} — ${entry.attribute.map((a) => a.option).join(" / ")}`,
+              name: entry.attribute.length > 0 ? `${entry.name} — ${entry.attribute.map((a) => a.option).join(" / ")}` : entry.name,
               description: item.sku,
               images: [entry.imageSrc],
             },

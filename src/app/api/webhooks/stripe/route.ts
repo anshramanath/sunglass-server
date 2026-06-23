@@ -47,15 +47,15 @@ export async function POST(req: NextRequest) {
       stripe_session_id: session.id,
       stripe_payment_intent: typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id,
       status: "paid",
-      total_cents: session.amount_total ?? 0,
+      total_cents: session.amount_total!,
       shipping_address: {
-        name: session.collected_information?.shipping_details?.name ?? null,
-        line1: session.collected_information?.shipping_details?.address?.line1 ?? null,
-        line2: session.collected_information?.shipping_details?.address?.line2 ?? null,
-        city: session.collected_information?.shipping_details?.address?.city ?? null,
-        state: session.collected_information?.shipping_details?.address?.state ?? null,
-        postalCode: session.collected_information?.shipping_details?.address?.postal_code ?? null,
-        country: session.collected_information?.shipping_details?.address?.country ?? null,
+        name: session.collected_information!.shipping_details!.name,
+        line1: session.collected_information!.shipping_details!.address!.line1,
+        line2: session.collected_information!.shipping_details!.address!.line2,
+        city: session.collected_information!.shipping_details!.address!.city,
+        state: session.collected_information!.shipping_details!.address!.state,
+        postalCode: session.collected_information!.shipping_details!.address!.postal_code,
+        country: session.collected_information!.shipping_details!.address!.country,
       },
     })
     .select("id")
@@ -64,17 +64,17 @@ export async function POST(req: NextRequest) {
   if (orderError || !order) return new Response("Failed to create order", { status: 500 });
 
   const orderItems = lineItems.data.map((item) => {
-    const fullName = (item as any).price?.product?.name ?? "";
-    const name = fullName.split(" — ")[0];
+    const product = (item as any).price.product;
+    const [name, attribute] = product.name.split(" — ");
     return {
       order_id: order.id,
       product_slug: slugify(name),
-      sku: (item as any).price?.product?.description ?? "",
+      sku: product.description,
       name,
-      image_src: (item as any).price?.product?.images?.[0] ?? "",
-      price_cents: item.price?.unit_amount ?? 0,
-      quantity: item.quantity ?? 1,
-      attribute: [],
+      image_src: product.images[0],
+      price_cents: item.price!.unit_amount!,
+      quantity: item.quantity!,
+      attribute: attribute ?? [],
     };
   });
 
