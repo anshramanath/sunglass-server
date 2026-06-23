@@ -21,7 +21,6 @@ export async function GET(req: NextRequest) {
     .select("id, parent_id, name, slug, sort_order")
     .eq("brand_slug", brandSlug);
 
-
   const nodeMap: Record<string, CategoryNode> = {};
   for (const cat of categories ?? []) {
     nodeMap[cat.id] = { id: cat.id, name: cat.name, slug: cat.slug, sortOrder: cat.sort_order };

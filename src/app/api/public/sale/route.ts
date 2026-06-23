@@ -78,8 +78,8 @@ export async function GET(req: NextRequest) {
       maxPriceCents: p.max_price_cents,
       salePriceCents: p.sale_price_cents,
       featured: p.featured,
-      imageSrc: firstImage?.src ?? null,
-      imageName: firstImage?.name ?? null,
+      imageSrc: firstImage!.src,
+      imageName: firstImage!.name,
       variations,
     };
   });

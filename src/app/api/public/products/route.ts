@@ -86,8 +86,8 @@ export async function GET(req: NextRequest) {
       salePriceCents: p.sale_price_cents,
       featured: p.featured,
       sale: p.sale,
-      imageSrc: firstImage?.src ?? null,
-      imageName: firstImage?.name ?? null,
+      imageSrc: firstImage!.src,
+      imageName: firstImage!.name,
       variations,
     };
   });
