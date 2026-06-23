@@ -151,5 +151,6 @@ export async function POST(req: NextRequest) {
     { idempotencyKey }
   );
 
+  if (!session.url) return err("Failed to create checkout session", 500);
   return ok(session.url, 200);
 }

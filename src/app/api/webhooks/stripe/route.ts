@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
       image_src: product.images[0],
       price_cents: item.price!.unit_amount!,
       quantity: item.quantity!,
-      attribute: attribute ?? [],
+      attribute: attribute ?? null,
     };
   });
 

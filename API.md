@@ -219,23 +219,31 @@ Case-insensitive product name search. Returns up to 6 results.
 
 ### POST /api/public/validate-cart
 
-Checks whether each cart item's product and variation still exist in the catalog. Call on cart page entry and before creating a checkout session.
+Checks whether each cart item exists and whether the price matches the current DB price. Call on cart page entry and before checkout.
+
+**Status codes**
+| Status | Meaning |
+|--------|---------|
+| `200` | All items exist and prices match |
+| `404` | One or more items don't exist |
+| `409` | One or more prices changed |
+| `422` | Both missing items and changed prices |
 
 **Body**
 ```json
 {
   "brandSlug": "sunglass-monster",
   "items": [
-    { "productSlug": "sport-sunglasses", "sku": "SKU-BLK" }
+    { "productSlug": "sport-sunglasses", "sku": "SKU-BLK", "priceCents": 1650 }
   ]
 }
 ```
 
-**Response** — `200` if all items exist, `409` if any do not.
+**Response**
 ```json
 [
-  { "productSlug": "sport-sunglasses", "sku": "SKU-BLK", "exists": true,  "priceCents": 1650 },
-  { "productSlug": "old-product",      "sku": "SKU-OLD", "exists": false, "priceCents": null }
+  { "productSlug": "sport-sunglasses", "sku": "SKU-BLK", "exists": true,  "priceCents": 1650, "priceChanged": false },
+  { "productSlug": "old-product",      "sku": "SKU-OLD", "exists": false, "priceCents": null, "priceChanged": false }
 ]
 ```
 
@@ -256,19 +264,18 @@ Returns the user's cart items for a brand.
 
 **Response**
 ```json
-{
-  "items": [
-    {
-      "productSlug": "sport-sunglasses",
-      "sku": "SKU-BLK",
-      "attribute": [{ "name": "color", "option": "Gloss Black" }],
-      "name": "Sport Sunglasses",
-      "imageSrc": "https://...",
-      "priceCents": 1650,
-      "quantity": 2
-    }
-  ]
-}
+[
+  {
+    "productId": "uuid",
+    "productSlug": "sport-sunglasses",
+    "sku": "SKU-BLK",
+    "attribute": [{ "name": "color", "option": "Gloss Black" }],
+    "name": "Sport Sunglasses",
+    "imageSrc": "https://...",
+    "priceCents": 1650,
+    "quantity": 2
+  }
+]
 ```
 
 ---
@@ -283,6 +290,7 @@ Replaces the user's cart for a brand (delete + insert). Pass an empty array to c
   "brandSlug": "sunglass-monster",
   "items": [
     {
+      "productId": "uuid",
       "productSlug": "sport-sunglasses",
       "sku": "SKU-BLK",
       "attribute": [{ "name": "color", "option": "Gloss Black" }],
@@ -313,15 +321,14 @@ Returns the user's bookmarks for a brand.
 
 **Response**
 ```json
-{
-  "items": [
-    {
-      "productSlug": "sport-sunglasses",
-      "name": "Sport Sunglasses",
-      "imageSrc": "https://..."
-    }
-  ]
-}
+[
+  {
+    "productId": "uuid",
+    "productSlug": "sport-sunglasses",
+    "name": "Sport Sunglasses",
+    "imageSrc": "https://..."
+  }
+]
 ```
 
 ---
@@ -336,6 +343,7 @@ Replaces the user's bookmarks for a brand (delete + insert). Pass an empty array
   "brandSlug": "sunglass-monster",
   "items": [
     {
+      "productId": "uuid",
       "productSlug": "sport-sunglasses",
       "name": "Sport Sunglasses",
       "imageSrc": "https://..."
@@ -365,7 +373,7 @@ Returns the user's order history for a brand, newest first.
 [
   {
     "id": "uuid",
-    "status": "paid",
+    "status": "processing",
     "totalCents": 7774,
     "shippingAddress": {
       "name": "John Smith",
@@ -381,27 +389,34 @@ Returns the user's order history for a brand, newest first.
       {
         "id": "uuid",
         "productSlug": "sport-sunglasses",
-        "sku": "SKU-BLK",
         "name": "Sport Sunglasses",
         "imageSrc": "https://...",
         "priceCents": 1650,
         "quantity": 2,
-        "attribute": [{ "name": "color", "option": "Gloss Black" }]
+        "attribute": "Gloss Black / Standard"
       }
     ]
   }
 ]
 ```
 
+`attribute` is a display string (e.g. `"Gloss Black / Standard"`) for variation products, or `null` for simple products. Order status values: `processing`, `shipped`, `delivered`.
+
 ---
 
 ### POST /api/user/checkout
 
-Creates a Stripe checkout session. Returns a redirect URL. Stripe collects the shipping address as part of the flow — no need to collect it on the frontend. Idempotent — same cart and order count returns the same session URL.
+Creates a Stripe checkout session. Returns a redirect URL. Stripe collects the shipping address — no need to collect it on the frontend.
 
-Price is enforced from the database — `priceCents` is not accepted and will be ignored if sent.
+Prices, name, images, and attributes are pulled from the DB — the frontend only needs to send `productSlug`, `sku`, `priceCents`, and `quantity`. Idempotent — same cart state and order count returns the same session URL; any DB change (price, name, image) produces a new session.
 
-If any item's `productSlug`+`sku` no longer exists, returns `409` with the same shape as `/validate-cart` before creating a session.
+**Status codes**
+| Status | Meaning |
+|--------|---------|
+| `200` | Session created — follow the URL |
+| `404` | One or more items don't exist |
+| `409` | One or more prices changed |
+| `422` | Both missing items and changed prices |
 
 **Body**
 ```json
@@ -411,10 +426,8 @@ If any item's `productSlug`+`sku` no longer exists, returns `409` with the same 
     {
       "productSlug": "sport-sunglasses",
       "sku": "SKU-BLK",
-      "name": "Sport Sunglasses",
-      "imageSrc": "https://...",
-      "quantity": 2,
-      "attribute": [{ "name": "color", "option": "Gloss Black" }]
+      "priceCents": 1650,
+      "quantity": 2
     }
   ],
   "successUrl": "https://yourdomain.com/order/success",
@@ -427,10 +440,10 @@ If any item's `productSlug`+`sku` no longer exists, returns `409` with the same 
 "https://checkout.stripe.com/..."
 ```
 
-**Response `409`** — one or more items invalid.
+**Response `404`/`409`/`422`** — same shape as `/validate-cart`.
 ```json
 [
-  { "productSlug": "old-product", "sku": "SKU-OLD", "exists": false, "priceCents": null }
+  { "productSlug": "sport-sunglasses", "sku": "SKU-BLK", "exists": true, "priceCents": 1800, "priceChanged": true }
 ]
 ```
 
@@ -442,4 +455,4 @@ If any item's `productSlug`+`sku` no longer exists, returns `409` with the same 
 
 Stripe webhook handler. Verified via `stripe-signature` header. Only handles `checkout.session.completed`.
 
-On payment completion: inserts an `orders` row and `order_items` rows, stores the shipping address collected by Stripe, then atomically increments `total_sales` on the relevant product or variation. Idempotent — duplicate deliveries are ignored via `stripe_session_id` unique constraint.
+On payment completion: inserts an `orders` row with status `processing` and `order_items` rows derived from the expanded Stripe line items. Idempotent — duplicate deliveries are ignored via `stripe_session_id` unique constraint.

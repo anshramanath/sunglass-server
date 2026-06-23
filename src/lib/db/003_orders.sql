@@ -10,7 +10,7 @@ create table orders (
   brand_slug            text        not null references brands(slug) on delete cascade,
   stripe_session_id     text        not null unique,
   stripe_payment_intent text not null unique,
-  status                text        not null default 'pending',
+  status                text        not null,
   total_cents           int         not null,
   shipping_address      jsonb       not null,
   created_at            timestamptz not null default now()
@@ -33,7 +33,7 @@ create table order_items (
   image_src     text  not null,
   price_cents   int   not null,
   quantity      int   not null,
-  attribute     jsonb not null default '[]'
+  attribute     text
 );
 
 alter table order_items enable row level security;
@@ -46,17 +46,3 @@ create policy "order_items: users read own rows"
     where orders.id = order_items.order_id
       and orders.user_id = auth.uid()
   ));
-
-create function increment_variation_total_sales(p_variation_id uuid, p_qty int)
-returns void
-language sql
-as $$
-  update variations set total_sales = total_sales + p_qty where id = p_variation_id;
-$$;
-
-create function increment_product_total_sales(p_product_id uuid, p_qty int)
-returns void
-language sql
-as $$
-  update products set total_sales = coalesce(total_sales, 0) + p_qty where id = p_product_id;
-$$;

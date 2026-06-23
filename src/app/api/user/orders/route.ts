@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
       imageSrc: item.image_src,
       priceCents: item.price_cents,
       quantity: item.quantity,
-      attribute: item.attribute ?? [],
+      attribute: item.attribute,
     })),
   }));
 
