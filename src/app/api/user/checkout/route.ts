@@ -8,16 +8,20 @@ import { ok, err } from "@/lib/api";
 type CartItem = {
   productSlug: string;
   sku: string;
-  name: string;
   imageSrc: string;
   quantity: number;
   attribute: { name: string; option: string }[];
 };
 
-function hashCart(items: CartItem[], priceMap: Map<string, number>) {
+type PriceEntry = { price: number; name: string };
+
+function hashCart(items: CartItem[], priceMap: Map<string, PriceEntry>) {
   const sorted = [...items]
     .sort((a, b) => a.sku.localeCompare(b.sku))
-    .map((i) => ({ ...i, priceCents: priceMap.get(`${i.productSlug}:${i.sku}`) }));
+    .map((i) => {
+      const entry = priceMap.get(`${i.productSlug}:${i.sku}`)!;
+      return { ...i, name: entry.name, priceCents: entry.price };
+    });
   return crypto.createHash("sha256").update(JSON.stringify(sorted)).digest("hex").slice(0, 32);
 }
 
@@ -39,21 +43,21 @@ export async function POST(req: NextRequest) {
 
   const { data: productRows } = await adminSupabase
     .from("products")
-    .select("slug, sku, sale, min_price_cents, sale_price_cents, variations(sku, sale, regular_price_cents, sale_price_cents)")
+    .select("slug, name, sku, sale, min_price_cents, sale_price_cents, variations(sku, sale, regular_price_cents, sale_price_cents)")
     .eq("brand_slug", brandSlug)
     .in("slug", slugs);
 
-  const priceMap = new Map<string, number>();
+  const priceMap = new Map<string, PriceEntry>();
   for (const p of productRows ?? []) {
-    if (p.sku) priceMap.set(`${p.slug}:${p.sku}`, p.sale ? p.sale_price_cents : p.min_price_cents);
-    for (const v of p.variations ?? []) priceMap.set(`${p.slug}:${v.sku}`, v.sale ? v.sale_price_cents : v.regular_price_cents);
+    if (p.sku) priceMap.set(`${p.slug}:${p.sku}`, { price: p.sale ? p.sale_price_cents : p.min_price_cents, name: p.name });
+    for (const v of p.variations ?? []) priceMap.set(`${p.slug}:${v.sku}`, { price: v.sale ? v.sale_price_cents : v.regular_price_cents, name: p.name });
   }
 
   const validation = (items as CartItem[]).map((item) => ({
     productSlug: item.productSlug,
     sku: item.sku,
     exists: priceMap.has(`${item.productSlug}:${item.sku}`),
-    priceCents: priceMap.get(`${item.productSlug}:${item.sku}`) ?? null,
+    priceCents: priceMap.get(`${item.productSlug}:${item.sku}`)?.price ?? null,
   }));
 
   if (validation.some((v) => !v.exists)) {
@@ -78,18 +82,21 @@ export async function POST(req: NextRequest) {
       client_reference_id: user.id,
       customer_email: user.email,
       metadata: { brandSlug },
-      line_items: (items as CartItem[]).map((item) => ({
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name: `${item.name} — ${item.attribute.map((a) => a.option).join(" / ")}`,
-            description: item.sku,
-            images: [item.imageSrc],
+      line_items: (items as CartItem[]).map((item) => {
+        const entry = priceMap.get(`${item.productSlug}:${item.sku}`)!;
+        return {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: `${entry.name} — ${item.attribute.map((a) => a.option).join(" / ")}`,
+              description: item.sku,
+              images: [item.imageSrc],
+            },
+            unit_amount: entry.price,
           },
-          unit_amount: priceMap.get(`${item.productSlug}:${item.sku}`)!,
-        },
-        quantity: item.quantity,
-      })),
+          quantity: item.quantity,
+        };
+      }),
       shipping_address_collection: { allowed_countries: ["US"] },
       success_url: successUrl,
       cancel_url: cancelUrl,
