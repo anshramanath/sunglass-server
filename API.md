@@ -231,11 +231,11 @@ Checks whether each cart item's product and variation still exist in the catalog
 }
 ```
 
-**Response**
+**Response** — `200` if all items exist, `409` if any do not.
 ```json
 [
-  { "productSlug": "sport-sunglasses", "sku": "SKU-BLK", "exists": true },
-  { "productSlug": "old-product", "sku": "SKU-OLD", "exists": false }
+  { "productSlug": "sport-sunglasses", "sku": "SKU-BLK", "exists": true,  "priceCents": 1650 },
+  { "productSlug": "old-product",      "sku": "SKU-OLD", "exists": false, "priceCents": null }
 ]
 ```
 
@@ -362,36 +362,35 @@ Returns the user's order history for a brand, newest first.
 
 **Response**
 ```json
-{
-  "orders": [
-    {
-      "id": "uuid",
-      "status": "paid",
-      "totalCents": 7774,
-      "shippingAddress": {
-        "name": "John Smith",
-        "line1": "123 Main St",
-        "line2": null,
-        "city": "Austin",
-        "state": "TX",
-        "postalCode": "78701",
-        "country": "US"
-      },
-      "createdAt": "2026-06-18T18:35:31.167Z",
-      "items": [
-        {
-          "productSlug": "sport-sunglasses",
-          "sku": "SKU-BLK",
-          "name": "Sport Sunglasses",
-          "imageSrc": "https://...",
-          "priceCents": 1650,
-          "quantity": 2,
-          "attribute": [{ "name": "color", "option": "Gloss Black" }]
-        }
-      ]
-    }
-  ]
-}
+[
+  {
+    "id": "uuid",
+    "status": "paid",
+    "totalCents": 7774,
+    "shippingAddress": {
+      "name": "John Smith",
+      "line1": "123 Main St",
+      "line2": null,
+      "city": "Austin",
+      "state": "TX",
+      "postalCode": "78701",
+      "country": "US"
+    },
+    "createdAt": "2026-06-18T18:35:31.167Z",
+    "items": [
+      {
+        "id": "uuid",
+        "productSlug": "sport-sunglasses",
+        "sku": "SKU-BLK",
+        "name": "Sport Sunglasses",
+        "imageSrc": "https://...",
+        "priceCents": 1650,
+        "quantity": 2,
+        "attribute": [{ "name": "color", "option": "Gloss Black" }]
+      }
+    ]
+  }
+]
 ```
 
 ---
@@ -399,6 +398,10 @@ Returns the user's order history for a brand, newest first.
 ### POST /api/user/checkout
 
 Creates a Stripe checkout session. Returns a redirect URL. Stripe collects the shipping address as part of the flow — no need to collect it on the frontend. Idempotent — same cart and order count returns the same session URL.
+
+Price is enforced from the database — `priceCents` is not accepted and will be ignored if sent.
+
+If any item's `productSlug`+`sku` no longer exists, returns `409` with the same shape as `/validate-cart` before creating a session.
 
 **Body**
 ```json
@@ -410,7 +413,6 @@ Creates a Stripe checkout session. Returns a redirect URL. Stripe collects the s
       "sku": "SKU-BLK",
       "name": "Sport Sunglasses",
       "imageSrc": "https://...",
-      "priceCents": 1650,
       "quantity": 2,
       "attribute": [{ "name": "color", "option": "Gloss Black" }]
     }
@@ -420,9 +422,16 @@ Creates a Stripe checkout session. Returns a redirect URL. Stripe collects the s
 }
 ```
 
-**Response**
+**Response `200`** — Stripe checkout URL (string).
 ```json
-{ "url": "https://checkout.stripe.com/..." }
+"https://checkout.stripe.com/..."
+```
+
+**Response `409`** — one or more items invalid.
+```json
+[
+  { "productSlug": "old-product", "sku": "SKU-OLD", "exists": false, "priceCents": null }
+]
 ```
 
 ---
