@@ -12,30 +12,33 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await supabase
     .from("bookmarks")
-    .select("product_slug, name, image_src")
+    .select("product_id, product_slug, name, image_src")
     .eq("brand_slug", brandSlug);
 
   if (error) return err("Failed to fetch bookmarks", 500);
 
-  const items = (data ?? []).map((row: { product_slug: string; name: string; image_src: string }) => ({
+  const items = (data ?? []).map((row) => ({
+    productId: row.product_id,
     productSlug: row.product_slug,
     name: row.name,
     imageSrc: row.image_src,
   }));
 
-  return ok({ items }, 200);
+  return ok(items, 200);
 }
 
 export async function PUT(req: NextRequest) {
   const body = await req.json();
-  const { brandSlug, items } = body;
+
+  const brandSlug = body.brandSlug;
   if (!brandSlug) return err("brandSlug is required", 400);
+
+  const items = body.items;
   if (!Array.isArray(items)) return err("items must be an array", 400);
 
   const client = await createUserClient(req);
   if (!client) return err("Unauthorized", 401);
   const { supabase, user } = client;
-  const userId = user.id;
 
   const { error: deleteError } = await supabase
     .from("bookmarks")
@@ -46,12 +49,14 @@ export async function PUT(req: NextRequest) {
 
   if (items.length > 0) {
     const rows = items.map((item: {
+      productId: string;
       productSlug: string;
       name: string;
       imageSrc: string;
     }) => ({
-      user_id: userId,
+      user_id: user.id,
       brand_slug: brandSlug,
+      product_id: item.productId,
       product_slug: item.productSlug,
       name: item.name,
       image_src: item.imageSrc,
@@ -61,5 +66,6 @@ export async function PUT(req: NextRequest) {
     if (insertError) return err("Failed to sync bookmarks", 500);
   }
 
-  return ok({ synced: items.length }, 200);
+  const result = { synced: items.length };
+  return ok(result, 200);
 }
