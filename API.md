@@ -253,14 +253,14 @@ Checks whether each cart item exists and whether the price matches the current D
 
 All require `Authorization: Bearer <supabase_access_token>`. Queries are scoped to `user_id` + `brand_slug` via RLS.
 
-### GET /api/user/cart
+### POST /api/user/cart
 
 Returns the user's cart items for a brand.
 
-**Query Params**
-| Param | Required | Description |
-|-------|----------|-------------|
-| brandSlug | yes | Brand slug |
+**Body**
+```json
+{ "brandSlug": "sunglass-monster" }
+```
 
 **Response**
 ```json
@@ -310,14 +310,14 @@ Replaces the user's cart for a brand (delete + insert). Pass an empty array to c
 
 ---
 
-### GET /api/user/bookmarks
+### POST /api/user/bookmarks
 
 Returns the user's bookmarks for a brand.
 
-**Query Params**
-| Param | Required | Description |
-|-------|----------|-------------|
-| brandSlug | yes | Brand slug |
+**Body**
+```json
+{ "brandSlug": "sunglass-monster" }
+```
 
 **Response**
 ```json
@@ -359,14 +359,14 @@ Replaces the user's bookmarks for a brand (delete + insert). Pass an empty array
 
 ---
 
-### GET /api/user/orders
+### POST /api/user/orders
 
 Returns the user's order history for a brand, newest first.
 
-**Query Params**
-| Param | Required | Description |
-|-------|----------|-------------|
-| brandSlug | yes | Brand slug |
+**Body**
+```json
+{ "brandSlug": "sunglass-monster" }
+```
 
 **Response**
 ```json

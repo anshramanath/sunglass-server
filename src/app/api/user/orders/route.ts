@@ -2,8 +2,10 @@ import { NextRequest } from "next/server";
 import { createUserClient } from "@/lib/supabase/user";
 import { ok, err } from "@/lib/api";
 
-export async function GET(req: NextRequest) {
-  const brandSlug = req.nextUrl.searchParams.get("brandSlug");
+export async function POST(req: NextRequest) {
+  const body = await req.json();
+  
+  const brandSlug = body.brandSlug;
   if (!brandSlug) return err("brandSlug is required", 400);
 
   const client = await createUserClient(req);
