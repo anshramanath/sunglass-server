@@ -60,7 +60,7 @@ export async function PUT(req: NextRequest) {
       productId: string;
       productSlug: string;
       sku: string;
-      attribute: { name: string; option: string }[];
+      attribute: { name: string; option: string; slug: string }[];
       name: string;
       imageSrc: string;
       priceCents: number;
