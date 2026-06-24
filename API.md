@@ -435,9 +435,9 @@ Prices, name, images, and attributes are pulled from the DB — the frontend onl
 }
 ```
 
-**Response `200`** — Stripe checkout URL (string).
+**Response `200`**
 ```json
-"https://checkout.stripe.com/..."
+{ "url": "https://checkout.stripe.com/..." }
 ```
 
 **Response `404`/`409`/`422`** — same shape as `/validate-cart`.
