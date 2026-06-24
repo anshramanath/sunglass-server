@@ -2,7 +2,7 @@
 
 Next.js API server for a multi-brand sunglasses e-commerce platform. API routes only — no frontend. Multiple storefronts share one codebase and database, scoped by `brand_slug`.
 
-**Stack:** Next.js 16 · Supabase (Postgres + RLS) · Stripe · TypeScript
+**Stack:** Next.js 16 · Supabase (Postgres + RLS + Auth) · Stripe · TypeScript
 
 ---
 
@@ -24,22 +24,22 @@ All endpoints return:
 | GET | `/api/public/sale` | Paginated sale products |
 | GET | `/api/public/item` | Full product detail, all variations and images |
 | GET | `/api/public/search` | Product name search, up to 6 results |
-| POST | `/api/public/validate-cart` | Check cart items still exist before checkout |
+| POST | `/api/public/validate-cart` | Check cart items exist and prices match |
 
-Price filters (`under-15`, `15-25`, `25-plus`, `sale`) are resolved server-side — never in the URL.
+Price filters (`under-15`, `15-25`, `25-plus`, `sale`) are resolved server-side.
 
 ### Authenticated — `Authorization: Bearer <token>`
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/user/cart` | Fetch cart |
+| POST | `/api/user/cart` | Fetch cart |
 | PUT | `/api/user/cart` | Replace cart (full sync) |
-| GET | `/api/user/bookmarks` | Fetch bookmarks |
+| POST | `/api/user/bookmarks` | Fetch bookmarks |
 | PUT | `/api/user/bookmarks` | Replace bookmarks (full sync) |
-| GET | `/api/user/orders` | Order history with shipping address and line items |
+| POST | `/api/user/orders` | Order history with shipping address and line items |
 | POST | `/api/user/checkout` | Create Stripe checkout session |
 
-Token is validated by Supabase. RLS enforces that users only access their own rows.
+Token is a Supabase JWT passed as a Bearer header. `createUserClient` verifies it via `auth.getUser()` and returns a scoped client. RLS enforces that users only access their own rows.
 
 ### Webhooks
 
@@ -47,7 +47,7 @@ Token is validated by Supabase. RLS enforces that users only access their own ro
 |--------|------|-------------|
 | POST | `/api/webhooks/stripe` | Handle `checkout.session.completed` |
 
-Creates the order, stores Stripe-collected shipping address, increments `total_sales` via Postgres RPC. Idempotent via unique constraint on `stripe_session_id`.
+Verified via `stripe-signature`. Creates the order and line items, stores Stripe-collected shipping address, increments `total_sales` via an AFTER INSERT trigger on `order_items`. Idempotent via unique constraint on `stripe_session_id`.
 
 ---
 
@@ -82,3 +82,13 @@ src/
         ├── 003_orders.sql
         └── drop_schema.sql           # dev only
 ```
+
+---
+
+## Tests
+
+```bash
+npx tsx tests/user.ts
+```
+
+Fills in a Supabase JWT and brand slug at the top, then runs against the Vercel deployment. Covers auth, cart sync, bookmark sync, orders, validate-cart, and checkout.
