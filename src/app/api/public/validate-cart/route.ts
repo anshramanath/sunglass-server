@@ -11,18 +11,19 @@ export async function POST(req: NextRequest) {
   if (!brandSlug) return err("brandSlug is required", 400);
 
   const items = body.items;
-  if (!Array.isArray(items)) return err("items must be an array", 400);
-  if (items.length === 0) return ok([], 200);
+  if (!Array.isArray(items) || items.length === 0) return err("items must be a non-empty array", 400);
 
   const slugs = (items as CartItem[]).map((i) => i.productSlug);
 
   const supabase = createAdminClient();
 
-  const { data: productRows } = await supabase
+  const { data: productRows, error } = await supabase
     .from("products")
     .select("slug, sku, sale, min_price_cents, sale_price_cents, variations(sku, sale, regular_price_cents, sale_price_cents)")
     .eq("brand_slug", brandSlug)
     .in("slug", slugs);
+
+  if (error) return err("Failed to validate cart", 500);
 
   const priceMap = new Map<string, number>();
   for (const p of productRows ?? []) {
@@ -49,5 +50,7 @@ export async function POST(req: NextRequest) {
     : hasChangedPrice ? 409
     : 200;
 
-  return ok(result, status);
+  if (status !== 200) return err("Cart validation failed", status, result);
+  
+  return ok(result);
 }

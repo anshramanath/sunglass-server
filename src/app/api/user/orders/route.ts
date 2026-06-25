@@ -38,5 +38,5 @@ export async function POST(req: NextRequest) {
     })),
   }));
 
-  return ok(orders, 200);
+  return ok(orders);
 }

@@ -10,5 +10,5 @@ export async function GET() {
 
   if (error) return err("Failed to fetch brands!", 500);
 
-  return ok(data, 200);
+  return ok(data);
 }

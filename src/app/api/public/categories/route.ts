@@ -49,5 +49,5 @@ export async function GET(req: NextRequest) {
 
   sortTree(roots);
 
-  return ok(roots, 200);
+  return ok(roots);
 }

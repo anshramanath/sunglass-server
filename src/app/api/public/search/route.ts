@@ -38,5 +38,5 @@ export async function GET(req: NextRequest) {
     };
   });
 
-  return ok(items, 200);
+  return ok(items);
 }

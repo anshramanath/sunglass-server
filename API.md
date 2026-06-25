@@ -3,8 +3,11 @@
 All endpoints return:
 ```json
 { "success": true,  "data": { ... } }
-{ "success": false, "error": "Message" }
+{ "success": false, "message": "Error description" }
+{ "success": false, "message": "Error description", "data": { ... } }
 ```
+
+The third shape is only used by `/validate-cart` and `/checkout` on 404/409/422 — `data` contains the per-item validation array.
 
 **Status codes**
 | Status | Meaning |
@@ -250,7 +253,7 @@ Case-insensitive product name search. Returns up to 6 results.
 
 Checks whether each cart item exists and whether the price matches the current DB price. Call on cart page entry and before checkout.
 
-**Errors:** `400` missing params
+**Errors:** `400` missing params · `500` DB failure
 
 **Status codes**
 | Status | Meaning |
@@ -270,12 +273,19 @@ Checks whether each cart item exists and whether the price matches the current D
 }
 ```
 
-**Response**
+**Response `200`**
 ```json
 [
+  { "productSlug": "sport-sunglasses", "sku": "SKU-BLK", "exists": true, "priceCents": 1650, "priceChanged": false }
+]
+```
+
+**Response `404`/`409`/`422`**
+```json
+{ "success": false, "message": "Cart validation failed", "data": [
   { "productSlug": "sport-sunglasses", "sku": "SKU-BLK", "exists": true,  "priceCents": 1650, "priceChanged": false },
   { "productSlug": "old-product",      "sku": "SKU-OLD", "exists": false, "priceCents": null, "priceChanged": false }
-]
+]}
 ```
 
 ---
@@ -483,11 +493,11 @@ Prices, name, images, and attributes are pulled from the DB — the frontend onl
 { "url": "https://checkout.stripe.com/..." }
 ```
 
-**Response `404`/`409`/`422`** — same shape as `/validate-cart`.
+**Response `404`/`409`/`422`** — same shape as `/validate-cart` error response.
 ```json
-[
+{ "success": false, "message": "Cart validation failed", "data": [
   { "productSlug": "sport-sunglasses", "sku": "SKU-BLK", "exists": true, "priceCents": 1800, "priceChanged": true }
-]
+]}
 ```
 
 ---

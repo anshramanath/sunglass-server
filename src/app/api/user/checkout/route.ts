@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
 
   if (hasInvalid || hasChangedPrice) {
     const status = hasInvalid && hasChangedPrice ? 422 : hasInvalid ? 404 : 409;
-    return ok(validation, status);
+    return err("Cart validation failed", status, validation);
   }
 
   const client = await createUserClient(req);
@@ -153,5 +153,5 @@ export async function POST(req: NextRequest) {
 
   if (!session.url) return err("Failed to create checkout session", 500);
   const sessionUrl = { url: session.url };
-  return ok(sessionUrl, 200);
+  return ok(sessionUrl);
 }

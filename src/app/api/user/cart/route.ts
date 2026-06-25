@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     quantity: row.quantity,
   }));
 
-  return ok(items, 200);
+  return ok(items);
 }
 
 export async function PUT(req: NextRequest) {
@@ -84,5 +84,5 @@ export async function PUT(req: NextRequest) {
   }
 
   const result = { synced: items.length };
-  return ok(result, 200);
+  return ok(result);
 }

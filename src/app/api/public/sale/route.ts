@@ -85,5 +85,14 @@ export async function GET(req: NextRequest) {
     };
   });
 
-  return ok({ products, page, size, totalPages, totalProducts, hasNextPage: page < totalPages }, 200);
+  const result = {
+    products,
+    page,
+    size,
+    totalPages,
+    totalProducts,
+    hasNextPage: page < totalPages,
+  };
+  
+  return ok(result);
 }

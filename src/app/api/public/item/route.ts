@@ -76,5 +76,5 @@ export async function GET(req: NextRequest) {
     descriptionImages,
   };
 
-  return ok(item, 200);
+  return ok(item);
 }
