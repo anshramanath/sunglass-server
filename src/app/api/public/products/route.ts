@@ -15,6 +15,7 @@ const FILTER_MAP: Record<string, { sale?: boolean; minPrice?: number; maxPrice?:
 
 export async function GET(req: NextRequest) {
   const params = req.nextUrl.searchParams;
+  
   const brandSlug = params.get("brandSlug");
   if (!brandSlug) return err("brandSlug is required", 400);
 

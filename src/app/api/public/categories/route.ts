@@ -16,10 +16,12 @@ export async function GET(req: NextRequest) {
 
   const supabase = createAdminClient();
 
-  const { data: categories } = await supabase
+  const { data: categories, error } = await supabase
     .from("categories")
     .select("id, parent_id, name, slug, sort_order")
     .eq("brand_slug", brandSlug);
+
+  if (error) return err("Failed to fetch categories", 500);
 
   const nodeMap: Record<string, CategoryNode> = {};
   for (const cat of categories ?? []) {

@@ -14,6 +14,7 @@ const FILTER_MAP: Record<string, { minPrice?: number; maxPrice?: number }> = {
 
 export async function GET(req: NextRequest) {
   const params = req.nextUrl.searchParams;
+  
   const brandSlug = params.get("brandSlug");
   if (!brandSlug) return err("brandSlug is required", 400);
 

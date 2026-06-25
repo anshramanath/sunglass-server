@@ -32,7 +32,8 @@ export async function GET(req: NextRequest) {
     .eq("brand_slug", brandSlug)
     .single();
 
-  if (error || !product) return err("Product not found!", 404);
+  if (error?.code === "PGRST116") return err("Product not found", 404);
+  if (error) return err("Failed to fetch product", 500);
 
   const variations = (product.variations ?? []).map((v) => ({
     sku: v.sku,
