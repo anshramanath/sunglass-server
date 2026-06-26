@@ -34,10 +34,14 @@ function hashCart(items: CartItem[], entryMap: Map<string, Entry>) {
         imageSrc: entry.imageSrc,
       };
     });
+
   return crypto.createHash("sha256").update(JSON.stringify(sorted)).digest("hex").slice(0, 32);
 }
 
 export async function POST(req: NextRequest) {
+  const client = await createUserClient(req);
+  if (!client) return err("Unauthorized", 401);
+
   const body = await req.json();
 
   const brandSlug = body.brandSlug;
@@ -110,9 +114,6 @@ export async function POST(req: NextRequest) {
     const status = hasInvalid && hasChangedPrice ? 422 : hasInvalid ? 404 : 409;
     return err("Cart validation failed", status, validation);
   }
-
-  const client = await createUserClient(req);
-  if (!client) return err("Unauthorized", 401);
 
   const { supabase: userSupabase, user } = client;
 

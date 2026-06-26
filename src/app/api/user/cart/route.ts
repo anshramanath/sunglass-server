@@ -3,13 +3,13 @@ import { createUserClient } from "@/lib/supabase/user";
 import { ok, err } from "@/lib/api";
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  
-  const brandSlug = body.brandSlug;
-  if (!brandSlug) return err("brandSlug is required", 400);
-
   const client = await createUserClient(req);
   if (!client) return err("Unauthorized", 401);
+
+  const body = await req.json();
+
+  const brandSlug = body.brandSlug;
+  if (!brandSlug) return err("brandSlug is required", 400);
 
   const { supabase } = client;
 
@@ -35,6 +35,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  const client = await createUserClient(req);
+  if (!client) return err("Unauthorized", 401);
+
   const body = await req.json();
 
   const brandSlug = body.brandSlug;
@@ -42,9 +45,6 @@ export async function PUT(req: NextRequest) {
 
   const items = body.items;
   if (!Array.isArray(items)) return err("items must be an array", 400);
-
-  const client = await createUserClient(req);
-  if (!client) return err("Unauthorized", 401);
 
   const { supabase, user } = client;
 
