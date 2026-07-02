@@ -10,8 +10,9 @@ Next.js API server for a multi-brand sunglasses e-commerce platform. API routes 
 
 All endpoints return:
 ```json
-{ "success": true,  "data": { ... } }   // 2xx
-{ "success": false, "error": "Message" } // 4xx / 5xx
+{ "success": true,  "data": { ... } }            // 2xx
+{ "success": false, "message": "..." }            // 4xx / 5xx
+{ "success": false, "message": "...", "data": [] } // validate-cart + checkout on 404/409/422
 ```
 
 ### Public
@@ -83,12 +84,3 @@ src/
         └── drop_schema.sql           # dev only
 ```
 
----
-
-## Tests
-
-```bash
-npx tsx tests/user.ts
-```
-
-Fills in a Supabase JWT and brand slug at the top, then runs against the Vercel deployment. Covers auth, cart sync, bookmark sync, orders, validate-cart, and checkout.
