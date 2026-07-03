@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
       )
     `)
     .eq("brand_slug", brandSlug)
-    .limit(n);
+    .limit(n * 2);
 
   if (error) return err("Failed to fetch products", 500);
 
@@ -65,5 +65,6 @@ export async function GET(req: NextRequest) {
     };
   });
 
-  return ok(products);
+  const shuffled = products.sort(() => Math.random() - 0.5).slice(0, n);
+  return ok(shuffled);
 }
