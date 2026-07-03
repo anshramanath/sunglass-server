@@ -251,7 +251,7 @@ Case-insensitive product name search. Returns up to 6 results.
 
 ### GET /api/public/filler
 
-Returns up to `n` products for a brand. No category, filters, or pagination. Same product shape as `/products`.
+Returns `n` randomly shuffled products for a brand. Fetches `2n` from the DB and shuffles in JS. No category, filters, or pagination. Same product shape as `/products`.
 
 **Query Params**
 | Param | Required | Default | Description |
