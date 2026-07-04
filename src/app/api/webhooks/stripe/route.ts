@@ -19,72 +19,96 @@ export async function POST(req: NextRequest) {
     return new Response("Invalid signature", { status: 400 });
   }
 
-  if (event.type !== "checkout.session.completed") {
-    return new Response("OK", { status: 200 });
-  }
-
-  const session = event.data.object;
-  const brandSlug = session.metadata?.brandSlug;
-  if (!brandSlug) return new Response("Missing brandSlug in session metadata", { status: 400 });
-
   const supabase = createAdminClient();
 
-  const { data: existing } = await supabase
-    .from("orders")
-    .select("id")
-    .eq("stripe_session_id", session.id)
-    .single();
+  switch (event.type) {
+    case "checkout.session.completed": {
+      const session = event.data.object;
+      const brandSlug = session.metadata?.brandSlug;
+      if (!brandSlug) return new Response("Missing brandSlug in session metadata", { status: 400 });
 
-  if (existing) return new Response("OK", { status: 200 });
+      const { data: existing } = await supabase
+        .from("orders")
+        .select("id")
+        .eq("stripe_session_id", session.id)
+        .single();
 
-  const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 100, expand: ["data.price.product"] });
+      if (existing) return new Response("OK", { status: 200 });
 
-  const { data: order, error: orderError } = await supabase
-    .from("orders")
-    .insert({
-      user_id: session.client_reference_id,
-      brand_slug: brandSlug,
-      stripe_session_id: session.id,
-      stripe_payment_intent: typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id,
-      status: "processing",
-      total_cents: session.amount_total!,
-      shipping_address: {
-        name: session.collected_information!.shipping_details!.name,
-        line1: session.collected_information!.shipping_details!.address!.line1,
-        line2: session.collected_information!.shipping_details!.address!.line2,
-        city: session.collected_information!.shipping_details!.address!.city,
-        state: session.collected_information!.shipping_details!.address!.state,
-        postalCode: session.collected_information!.shipping_details!.address!.postal_code,
-        country: session.collected_information!.shipping_details!.address!.country,
-      },
-    })
-    .select("id")
-    .single();
+      const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 100, expand: ["data.price.product"] });
 
-  if (orderError || !order) return new Response("Failed to create order", { status: 500 });
+      const { data: order, error: orderError } = await supabase
+        .from("orders")
+        .insert({
+          user_id: session.client_reference_id,
+          brand_slug: brandSlug,
+          stripe_session_id: session.id,
+          stripe_payment_intent: typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id,
+          status: "processing",
+          total_cents: session.amount_total!,
+          refunded_cents: null,
+          shipping_address: {
+            name: session.collected_information!.shipping_details!.name,
+            line1: session.collected_information!.shipping_details!.address!.line1,
+            line2: session.collected_information!.shipping_details!.address!.line2,
+            city: session.collected_information!.shipping_details!.address!.city,
+            state: session.collected_information!.shipping_details!.address!.state,
+            postalCode: session.collected_information!.shipping_details!.address!.postal_code,
+            country: session.collected_information!.shipping_details!.address!.country,
+          },
+        })
+        .select("id")
+        .single();
 
-  const orderItems = lineItems.data.map((item) => {
-    const product = (item as any).price.product;
-    const [name, attribute] = product.name.split(" — ");
-    return {
-      order_id: order.id,
-      product_slug: slugify(name),
-      sku: product.description,
-      name,
-      image_src: product.images[0],
-      price_cents: item.price!.unit_amount!,
-      quantity: item.quantity!,
-      attribute: attribute ?? null,
-    };
-  });
+      if (orderError || !order) return new Response("Failed to create order", { status: 500 });
 
-  if (orderItems.length > 0) {
-    const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
-    if (itemsError) {
-      await supabase.from("orders").delete().eq("id", order.id);
-      return new Response("Failed to create order items", { status: 500 });
+      const orderItems = lineItems.data.map((item) => {
+        const product = (item as any).price.product;
+        const [name, attribute] = product.name.split(" — ");
+        return {
+          order_id: order.id,
+          product_slug: slugify(name),
+          sku: product.description,
+          name,
+          image_src: product.images[0],
+          price_cents: item.price!.unit_amount!,
+          quantity: item.quantity!,
+          attribute: attribute ?? null,
+        };
+      });
+
+      if (orderItems.length > 0) {
+        const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
+        if (itemsError) {
+          await supabase.from("orders").delete().eq("id", order.id);
+          return new Response("Failed to create order items", { status: 500 });
+        }
+      }
+
+      return new Response("OK", { status: 200 });
     }
-  }
 
-  return new Response("OK", { status: 200 });
+    case "charge.refunded": {
+      const charge = event.data.object;
+      const paymentIntent = typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
+      if (!paymentIntent) return new Response("Missing payment intent", { status: 400 });
+
+      const isFullRefund = charge.amount_refunded === charge.amount;
+
+      const { error } = await supabase
+        .from("orders")
+        .update({
+          refunded_cents: charge.amount_refunded,
+          status: isFullRefund ? "refunded" : "partially_refunded",
+        })
+        .eq("stripe_payment_intent", paymentIntent);
+
+      if (error) return new Response("Failed to update order", { status: 500 });
+
+      return new Response("OK", { status: 200 });
+    }
+
+    default:
+      return new Response("OK", { status: 200 });
+  }
 }
