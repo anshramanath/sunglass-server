@@ -39,7 +39,7 @@ export default function Sidebar({
   }
 
   return (
-    <aside className="w-[264px] flex-none bg-white border-r border-[#e5e5e5] flex flex-col px-5 py-7 box-border">
+    <aside className="w-[264px] flex-none sticky top-0 h-screen overflow-y-auto bg-white border-r border-[#e5e5e5] flex flex-col px-5 py-7 box-border">
       <div className="h-10 mb-5 flex items-center pl-1">
         <Image
           src={currentBrand.logo}
