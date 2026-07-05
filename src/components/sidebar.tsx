@@ -1,0 +1,134 @@
+"use client";
+
+import { usePathname, useRouter } from "next/navigation";
+import Image from "next/image";
+import type { User } from "@supabase/supabase-js";
+import { signOut } from "@/lib/auth";
+
+const BRANDS = [
+  { slug: "bikershades", name: "BikerShades", accent: "#C93A2B", logo: "/bikershades/logo.jpg" },
+  { slug: "prosport-sunglasses", name: "proSPORT Sunglasses", accent: "#2EA3DC", logo: "/prosport-sunglasses/logo.jpg" },
+  { slug: "sunglass-monster", name: "Sunglass Monster", accent: "#E0522D", logo: "/sunglass-monster/logo.jpg" },
+];
+
+const NAV = [
+  { label: "Overview", path: "" },
+  { label: "Orders", path: "/orders" },
+  { label: "Products", path: "/products" },
+  { label: "Categories", path: "/categories" },
+  { label: "Analytics", path: "/analytics" },
+];
+
+export default function Sidebar({
+  user,
+  currentBrandSlug,
+}: {
+  user: User;
+  currentBrandSlug: string;
+}) {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const currentBrand = BRANDS.find((b) => b.slug === currentBrandSlug) ?? BRANDS[0];
+  const email = user.email ?? "";
+  const initials = email[0].toUpperCase();
+
+  function isActive(path: string) {
+    const base = `/admin/${currentBrandSlug}`;
+    return path === "" ? pathname === base : pathname.startsWith(base + path);
+  }
+
+  return (
+    <aside className="w-[264px] flex-none bg-white border-r border-[#e5e5e5] flex flex-col px-5 py-7 box-border">
+      <div className="h-10 mb-5 flex items-center pl-1">
+        <Image
+          src={currentBrand.logo}
+          alt={currentBrand.name}
+          width={160}
+          height={40}
+          className="max-h-10 w-auto object-contain object-left"
+        />
+      </div>
+
+      <div className="mb-8">
+        <div className="flex flex-col gap-2">
+          {BRANDS.map((brand) => {
+            const active = brand.slug === currentBrandSlug;
+            return (
+              <div
+                key={brand.slug}
+                onClick={() => router.push(`/admin/${brand.slug}`)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "12px 14px",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  border: `1px solid ${active ? brand.accent : "#e5e5e5"}`,
+                  background: active ? brand.accent : "#ffffff",
+                  color: active ? "#ffffff" : "#000000",
+                  transition: "border-color 120ms",
+                }}
+              >
+                <span
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    background: active ? "#ffffff" : brand.accent,
+                    flexShrink: 0,
+                  }}
+                />
+                <span>{brand.name}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="flex flex-col">
+        {NAV.map(({ label, path }) => {
+          const active = isActive(path);
+          return (
+            <div
+              key={label}
+              onClick={() => router.push(`/admin/${currentBrandSlug}${path}`)}
+              style={{
+                padding: "11px 12px",
+                fontSize: 14,
+                fontWeight: 500,
+                cursor: "pointer",
+                background: active ? currentBrand.accent : "transparent",
+                color: active ? "#ffffff" : "#525252",
+              }}
+            >
+              {label}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="flex-1" />
+
+      <div className="border-t border-[#e5e5e5] pt-4 flex items-center gap-2.5">
+        <div className="w-8 h-8 rounded-full bg-[#f5f5f5] flex items-center justify-center text-[12px] font-medium flex-none">
+          {initials}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-[14px] truncate">{email}</div>
+          <div className="text-[12px] text-[#737373]">Admin</div>
+        </div>
+        <form action={signOut}>
+          <button
+            type="submit"
+            className="text-[12px] text-[#737373] underline underline-offset-[3px] cursor-pointer flex-none"
+          >
+            Sign out
+          </button>
+        </form>
+      </div>
+    </aside>
+  );
+}
