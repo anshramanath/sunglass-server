@@ -1,3 +1,31 @@
+export type OrderItem = {
+  id: string;
+  name: string;
+  imageSrc: string | null;
+  priceCents: number;
+  quantity: number;
+  attribute: string | null;
+};
+
+export type Order = {
+  id: string;
+  status: string;
+  totalCents: number;
+  refundedCents: number;
+  shippingAddress: {
+    name: string;
+    line1: string;
+    line2?: string;
+    city: string;
+    state: string;
+    postal_code: string;
+    country: string;
+  };
+  paymentIntent: string;
+  createdAt: string;
+  items: OrderItem[];
+};
+
 export type CategoryNode = {
   id: string;
   name: string;

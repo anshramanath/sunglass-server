@@ -1,0 +1,44 @@
+import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/auth";
+
+export async function getOrders(brandSlug: string) {
+  await requireAdmin();
+  const supabase = createAdminClient();
+
+  const { data, error } = await supabase
+    .from("orders")
+    .select(`
+      id, status, total_cents, refunded_cents, shipping_address, stripe_payment_intent, created_at,
+      order_items(id, name, image_src, price_cents, quantity, attribute)
+    `)
+    .eq("brand_slug", brandSlug)
+    .order("created_at", { ascending: false });
+
+  if (error || !data) throw new Error(`Failed to fetch orders: ${error?.message}`);
+
+  return data.map((o) => ({
+    id: o.id,
+    status: o.status as "processing" | "shipped" | "delivered" | "refunded" | "partially_refunded",
+    totalCents: o.total_cents,
+    refundedCents: o.refunded_cents,
+    shippingAddress: o.shipping_address as {
+      name: string;
+      line1: string;
+      line2?: string;
+      city: string;
+      state: string;
+      postal_code: string;
+      country: string;
+    },
+    paymentIntent: o.stripe_payment_intent as string,
+    createdAt: o.created_at,
+    items: o.order_items.map((i) => ({
+      id: i.id,
+      name: i.name,
+      imageSrc: i.image_src,
+      priceCents: i.price_cents,
+      quantity: i.quantity,
+      attribute: i.attribute,
+    })),
+  }));
+}
