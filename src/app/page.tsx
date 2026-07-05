@@ -3,12 +3,9 @@
 import { useState } from "react";
 import Image from "next/image";
 import { signIn } from "@/lib/auth";
+import { getAllBrands } from "@/lib/brand";
 
-const LOGOS = [
-  { slug: "bikershades", src: "/bikershades/logo.jpg", alt: "BikerShades" },
-  { slug: "prosport-sunglasses", src: "/prosport-sunglasses/logo.jpg", alt: "proSport Sunglass" },
-  { slug: "sunglass-monster", src: "/sunglass-monster/logo.jpg", alt: "Sunglass Monster" },
-];
+const BRANDS = getAllBrands();
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
@@ -22,7 +19,7 @@ export default function SignInPage() {
     setError("");
 
     const result = await signIn(email, password);
-    
+
     if (result?.error) {
       setError(result.error);
       setLoading(false);
@@ -33,11 +30,11 @@ export default function SignInPage() {
     <div className="min-h-screen flex items-center justify-center bg-white px-6 box-border">
       <div className="w-full max-w-[380px]">
         <div className="flex items-center justify-center gap-3 mb-10">
-          {LOGOS.map((logo) => (
+          {BRANDS.map((brand) => (
             <Image
-              key={logo.slug}
-              src={logo.src}
-              alt={logo.alt}
+              key={brand.slug}
+              src={brand.logo}
+              alt={brand.name}
               width={80}
               height={22}
               className="h-[22px] w-auto object-contain"
@@ -66,7 +63,7 @@ export default function SignInPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full h-11 border border-[#e5e5e5] px-3 text-[14px] font-[family-name:var(--font-geist-sans)] text-black placeholder:text-[#a3a3a3] outline-none focus:border-black"
+                className="w-full h-11 border border-[#e5e5e5] px-3 text-[14px] text-black placeholder:text-[#a3a3a3] outline-none focus:border-black"
               />
             </div>
             <div>
@@ -79,7 +76,7 @@ export default function SignInPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full h-11 border border-[#e5e5e5] px-3 text-[14px] font-[family-name:var(--font-geist-sans)] text-black placeholder:text-[#a3a3a3] outline-none focus:border-black"
+                className="w-full h-11 border border-[#e5e5e5] px-3 text-[14px] text-black placeholder:text-[#a3a3a3] outline-none focus:border-black"
               />
             </div>
           </div>
@@ -96,7 +93,6 @@ export default function SignInPage() {
             {loading ? "Signing in…" : "Sign in"}
           </button>
         </form>
-
       </div>
     </div>
   );

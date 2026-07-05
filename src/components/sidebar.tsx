@@ -4,12 +4,9 @@ import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import type { User } from "@supabase/supabase-js";
 import { signOut } from "@/lib/auth";
+import { getAllBrands } from "@/lib/brand";
 
-const BRANDS = [
-  { slug: "bikershades", name: "BikerShades", accent: "#C93A2B", logo: "/bikershades/logo.jpg" },
-  { slug: "prosport-sunglasses", name: "proSPORT Sunglasses", accent: "#2EA3DC", logo: "/prosport-sunglasses/logo.jpg" },
-  { slug: "sunglass-monster", name: "Sunglass Monster", accent: "#E0522D", logo: "/sunglass-monster/logo.jpg" },
-];
+const BRANDS = getAllBrands();
 
 const NAV = [
   { label: "Overview", path: "" },
