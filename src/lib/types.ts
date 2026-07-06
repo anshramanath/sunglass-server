@@ -1,3 +1,17 @@
+export type RankedRow = {
+  name: string;
+  subtitle?: string;
+  value: string;
+  barPct: number;
+};
+
+export type AnalyticsItemRow = {
+  product_slug: string;
+  name: string;
+  sku: string;
+  quantity: number;
+};
+
 export type OrderItem = {
   id: string;
   name: string;

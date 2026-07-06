@@ -48,14 +48,6 @@ export default function OrdersTable({ orders, accent }: { orders: Order[]; accen
 
   const visible = filter === "all" ? orders : orders.filter((o) => o.status === filter);
 
-  if (orders.length === 0) {
-    return (
-      <div style={{ padding: "60px 0", color: "#737373", fontSize: 15, borderTop: "1px solid #e5e5e5" }}>
-        No orders placed for this brand yet.
-      </div>
-    );
-  }
-
   return (
     <div>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 24 }}>
