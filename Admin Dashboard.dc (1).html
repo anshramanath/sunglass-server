@@ -20,9 +20,9 @@
 <sc-if value="{{ showSignIn }}" hint-placeholder-val="{{ true }}">
   <div style="min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--aritzia-white); font-family:var(--font-sans); padding:24px; box-sizing:border-box;">
     <div style="width:100%; max-width:380px;">
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:40px; justify-content:center;">
+      <div style="display:flex; align-items:center; gap:24px; margin-bottom:40px; justify-content:center;">
         <sc-for list="{{ signInLogos }}" as="lg" hint-placeholder-count="3">
-          <img src="{{ lg.src }}" alt="{{ lg.alt }}" style="height:22px; object-fit:contain;" />
+          <img src="{{ lg.src }}" alt="{{ lg.alt }}" style="height:36px; object-fit:contain;" />
         </sc-for>
       </div>
 
@@ -42,7 +42,7 @@
         </div>
       </div>
 
-      <x-import component-from-global-scope="AritziaDesignSystem_fb1eba.Button" variant="primary" onClick="{{ onSignIn }}" style="width:100%;" hint-size="100%,48px"><span style="white-space:nowrap;">Sign in</span></x-import>
+      <x-import component-from-global-scope="AritziaDesignSystem_fb1eba.Button" variant="primary" onClick="{{ onSignIn }}" dc-props="{{ signInButtonProps }}" style="width:100%;" hint-size="100%,48px"><span style="white-space:nowrap;">Sign in</span></x-import>
 
       <div style="text-align:center; margin-top:18px;">
         <span style="font-size:13px; color:var(--grey-500); text-decoration:underline; text-underline-offset:3px; cursor:pointer;">Forgot password?</span>
@@ -251,13 +251,24 @@
       <div>
         <sc-if value="{{ hasAnyProducts }}" hint-placeholder-val="{{ true }}">
           <div>
-            <div style="display:flex; gap:12px; margin-bottom:24px; flex-wrap:wrap;">
-              <x-import component-from-global-scope="AritziaDesignSystem_fb1eba.Input" placeholder="Search by name or SKU" value="{{ productSearch }}" onChange="{{ onProductSearch }}" style="width:280px;" hint-size="280px,44px"></x-import>
-              <select value="{{ productCategory }}" onChange="{{ onProductCategoryChange }}" style="height:44px; border:1px solid var(--color-border-input); padding:0 14px; font-family:var(--font-sans); font-size:14px; background:var(--aritzia-white);">
-                <sc-for list="{{ categoryFilterOptions }}" as="opt" hint-placeholder-count="4">
-                  <option value="{{ opt.value }}">{{ opt.label }}</option>
-                </sc-for>
-              </select>
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:24px; flex-wrap:wrap;">
+              <div style="display:flex; align-items:center; gap:0; width:400px; height:44px; flex:none;">
+                <x-import component-from-global-scope="AritziaDesignSystem_fb1eba.Input" placeholder="Search by name or SKU" value="{{ productSearchDraft }}" onChange="{{ onProductSearchDraft }}" onKeyDown="{{ onProductSearchKeyDown }}" dc-props="{{ searchInputProps }}" style="flex:1; min-width:0; height:44px;" hint-size="auto,44px"></x-import>
+                <x-import component-from-global-scope="AritziaDesignSystem_fb1eba.Button" variant="primary" onClick="{{ applyProductSearch }}" dc-props="{{ searchButtonProps }}" style="height:44px;" hint-size="auto,44px"><span style="white-space:nowrap;">Search</span></x-import>
+              </div>
+              <div style="position:relative; width:180px; flex:none;">
+                <div onClick="{{ toggleCategoryDropdown }}" style="height:44px; width:100%; border:1px solid var(--aritzia-black); padding:0 18px; font-family:var(--font-sans); font-size:14px; background:var(--aritzia-white); display:flex; align-items:center; justify-content:space-between; gap:10px; cursor:pointer; user-select:none; box-sizing:border-box;">
+                  <span>{{ categoryDropdownLabel }}</span>
+                  <span style="font-size:11px; transform:{{ categoryDropdownChevron }}; transition:transform 120ms;">▾</span>
+                </div>
+                <sc-if value="{{ categoryDropdownOpen }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute; top:46px; right:0; width:100%; background:var(--aritzia-white); border:1px solid var(--aritzia-black); z-index:10; box-sizing:border-box;">
+                    <sc-for list="{{ categoryFilterOptions }}" as="opt" hint-placeholder-count="4">
+                      <div onClick="{{ opt.select }}" style="{{ opt.rowStyle }}">{{ opt.label }}</div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
             </div>
 
             <div style="display:grid; grid-template-columns:56px 2fr 1.4fr 1fr 120px; gap:16px; padding:0 0 10px; border-bottom:1px solid var(--aritzia-black); font-size:12px; font-weight:500; letter-spacing:0.06em; text-transform:uppercase; color:var(--grey-500);">
@@ -281,6 +292,11 @@
                   <div style="font-size:13px; color:{{ p.saleColor }};">{{ p.saleLabel }}</div>
                 </div>
               </sc-for>
+              <sc-if value="{{ hasMoreProducts }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex; justify-content:center; padding-top:24px;">
+                  <x-import component-from-global-scope="AritziaDesignSystem_fb1eba.Button" variant="secondary" size="sm" onClick="{{ loadMoreProducts }}" dc-props="{{ loadMoreButtonProps }}" hint-size="auto,38px"><span style="white-space:nowrap;">Load more</span></x-import>
+                </div>
+              </sc-if>
             </sc-if>
             <sc-if value="{{ !hasFilteredProducts }}" hint-placeholder-val="{{ false }}">
               <div style="padding:40px 0; color:var(--grey-500); font-size:15px;">No products match those filters.</div>
@@ -817,7 +833,10 @@ class Component extends DCLogic {
     orderFilter: 'all',
     expandedOrder: null,
     productSearch: '',
+    productSearchDraft: '',
     productCategory: 'all',
+    categoryDropdownOpen: false,
+    productPageSize: 6,
     collapsedCats: {},
     selectedProductId: null,
     products: JSON.parse(JSON.stringify(this.seedProducts))
@@ -830,6 +849,14 @@ class Component extends DCLogic {
     for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
     h = Math.abs(h);
     return this.productImages[(h + (offset || 0)) % this.productImages.length];
+  }
+
+  shade(hex, amt) {
+    const n = parseInt(hex.slice(1), 16);
+    let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    const adj = (c) => Math.max(0, Math.min(255, Math.round(c + (amt < 0 ? c * amt : (255 - c) * amt))));
+    r = adj(r); g = adj(g); b = adj(b);
+    return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
   }
 
   fmt(cents) { return '$' + (cents / 100).toFixed(2); }
@@ -1002,7 +1029,7 @@ class Component extends DCLogic {
       const accent = this.db[k].accent;
       return {
         value: k, label: this.db[k].label,
-        select: () => this.setState({ brand: k, page: s.page, orderFilter: 'all', expandedOrder: null, productSearch: '', productCategory: 'all', collapsedCats: {}, selectedProductId: null }),
+        select: () => this.setState({ brand: k, page: s.page, orderFilter: 'all', expandedOrder: null, productSearch: '', productCategory: 'all', productPageSize: 6, collapsedCats: {}, selectedProductId: null }),
         dotColor: active ? 'var(--aritzia-white)' : accent,
         tabStyle: `display:flex; align-items:center; gap:10px; padding:12px 14px; font-size:13px; font-weight:500; cursor:pointer; border:1px solid ${active ? accent : 'var(--color-border)'}; background:${active ? accent : 'var(--aritzia-white)'}; color:${active ? 'var(--aritzia-white)' : 'var(--aritzia-black)'}; transition:border-color 120ms;`
       };
@@ -1016,6 +1043,7 @@ class Component extends DCLogic {
       { key: 'analytics', label: 'Analytics' }
     ];
     const brandAccent = brandData.accent;
+    const brandAccentHover = this.shade(brandAccent, -0.18);
     const navItems = navDefs.map(n => {
       const active = s.page === n.key;
       return {
@@ -1130,7 +1158,16 @@ class Component extends DCLogic {
     });
 
     // ---- Products list ----
-    const categoryFilterOptions = [{ value: 'all', label: 'All categories' }].concat(uniqueCatNames.map(name => ({ value: name, label: name })));
+    const categoryFilterDefs = [{ value: 'all', label: 'All categories' }].concat(uniqueCatNames.map(name => ({ value: name, label: name })));
+    const categoryDropdownLabel = (categoryFilterDefs.find(o => o.value === s.productCategory) || categoryFilterDefs[0]).label;
+    const categoryFilterOptions = categoryFilterDefs.map(opt => {
+      const active = s.productCategory === opt.value;
+      return {
+        value: opt.value, label: opt.label,
+        select: () => this.setState({ productCategory: opt.value, categoryDropdownOpen: false, productPageSize: 6 }),
+        rowStyle: `padding:11px 18px; font-size:14px; cursor:pointer; background:${active ? brandAccent : 'var(--aritzia-white)'}; color:${active ? 'var(--aritzia-white)' : 'var(--aritzia-black)'};`
+      };
+    });
 
     const q = s.productSearch.trim().toLowerCase();
     const filteredProducts = products.filter(p => {
@@ -1138,7 +1175,8 @@ class Component extends DCLogic {
       const matchesCat = s.productCategory === 'all' || p.categories.includes(s.productCategory);
       return matchesQ && matchesCat;
     });
-    const productsView = filteredProducts.map(toRow);
+    const productsView = filteredProducts.slice(0, s.productPageSize).map(toRow);
+    const hasMoreProducts = filteredProducts.length > s.productPageSize;
 
     // ---- Categories ----
     const categoryRows = [];
@@ -1189,12 +1227,13 @@ class Component extends DCLogic {
       signInPassword: s.signInPassword,
       onSignInPasswordChange: (e) => this.setState({ signInPassword: e.target.value }),
       onSignIn: () => this.setState({ signedIn: true }),
+      signInButtonProps: { style: { width: '100%' } },
 
       brand: s.brand,
       brandLabel: brandData.label,
       brandLogoSrc: brandData.logo,
       brandOptions,
-      onBrandChange: (e) => this.setState({ brand: e.target.value, page: s.page, orderFilter: 'all', expandedOrder: null, productSearch: '', productCategory: 'all', collapsedCats: {}, selectedProductId: null }),
+      onBrandChange: (e) => this.setState({ brand: e.target.value, page: s.page, orderFilter: 'all', expandedOrder: null, productSearch: '', productCategory: 'all', productPageSize: 6, collapsedCats: {}, selectedProductId: null }),
       navItems,
       adminName: 'Alex Rivera',
       adminInitials: 'AR',
@@ -1221,12 +1260,29 @@ class Component extends DCLogic {
 
       hasAnyProducts: products.length > 0,
       hasFilteredProducts: productsView.length > 0,
-      productSearch: s.productSearch,
-      onProductSearch: (e) => this.setState({ productSearch: e.target.value }),
+      productSearchDraft: s.productSearchDraft,
+      onProductSearchDraft: (e) => this.setState({ productSearchDraft: e.target.value }),
+      onProductSearchKeyDown: (e) => { if (e.key === 'Enter') this.setState(st => ({ productSearch: st.productSearchDraft, productPageSize: 6 })); },
+      applyProductSearch: () => this.setState(st => ({ productSearch: st.productSearchDraft, productPageSize: 6 })),
+      searchInputProps: { style: { height: '44px' }, inputStyle: { height: '44px', fontSize: '14px' } },
+      searchButtonProps: {
+        style: { background: brandAccent, borderColor: brandAccent, height: '44px' },
+        onMouseEnter: (e) => {},
+        onMouseLeave: (e) => { e.currentTarget.style.background = brandAccent; }
+      },
       productCategory: s.productCategory,
-      onProductCategoryChange: (e) => this.setState({ productCategory: e.target.value }),
+      categoryDropdownOpen: s.categoryDropdownOpen,
+      categoryDropdownLabel,
+      categoryDropdownChevron: s.categoryDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+      toggleCategoryDropdown: () => this.setState(st => ({ categoryDropdownOpen: !st.categoryDropdownOpen })),
       categoryFilterOptions,
       productsView,
+      hasMoreProducts,
+      loadMoreProducts: () => this.setState(st => ({ productPageSize: st.productPageSize + 6 })),
+      loadMoreButtonProps: {
+        onMouseEnter: (e) => {},
+        onMouseLeave: (e) => { e.currentTarget.style.background = 'var(--aritzia-white)'; e.currentTarget.style.color = 'var(--aritzia-black)'; }
+      },
       productDetail,
 
       categoryRows,

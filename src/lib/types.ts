@@ -66,3 +66,22 @@ export type LeafEntry = {
   path: string;
   breadcrumbs: string[];
 };
+
+export type AdminProduct = {
+  id: string;
+  name: string;
+  slug: string;
+  sale: boolean;
+  featured: boolean;
+  variable: boolean;
+  minPriceCents: number;
+  maxPriceCents: number;
+  salePriceCents: number | null;
+  categories: string[];
+  image: string;
+};
+
+export type CategoryOption = {
+  id: string;
+  name: string;
+};

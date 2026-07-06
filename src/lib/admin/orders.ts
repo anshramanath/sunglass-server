@@ -14,7 +14,7 @@ export async function getOrders(brandSlug: string) {
     .eq("brand_slug", brandSlug)
     .order("created_at", { ascending: false });
 
-  if (error || !data) throw new Error(`Failed to fetch orders: ${error?.message}`);
+  if (error) throw new Error("Failed to fetch orders");
 
   return data.map((o) => ({
     id: o.id,

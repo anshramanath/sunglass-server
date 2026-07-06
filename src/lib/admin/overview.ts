@@ -13,7 +13,7 @@ export async function getCatalogueStats(brandSlug: string) {
       supabase.from("categories").select("id, name, slug, parent_id").eq("brand_slug", brandSlug),
     ]);
 
-  if (productsError || categoriesError || !products || !rawCategories) throw new Error("Failed to fetch catalogue stats");
+  if (productsError || categoriesError) throw new Error("Failed to fetch catalogue stats");
 
   const nodeMap: Record<string, CategoryNode> = {};
   for (const cat of rawCategories) {
@@ -47,7 +47,7 @@ export async function getOrderStats(brandSlug: string) {
     .select("status, total_cents")
     .eq("brand_slug", brandSlug);
 
-  if (error || !orders) throw new Error("Failed to fetch order stats");
+  if (error) throw new Error("Failed to fetch order stats");
 
   return {
     active: orders.filter((o) => o.status === "processing").length,
@@ -65,13 +65,13 @@ export async function getRecentProducts(brandSlug: string) {
     .from("products")
     .select(`
       id, name, sku, sale, min_price_cents, max_price_cents, sale_price_cents, featured,
-      product_categories!inner(categories!inner(name)),
+      product_categories(categories!inner(name)),
       product_images(src, sort_order)
     `)
     .eq("brand_slug", brandSlug)
     .limit(5);
 
-  if (error || !data) throw new Error("Failed to fetch recent products");
+  if (error) throw new Error("Failed to fetch recent products");
 
   return data.map((p) => ({
     id: p.id,

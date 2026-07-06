@@ -27,8 +27,8 @@ export default function Sidebar({
   const router = useRouter();
 
   const currentBrand = BRANDS.find((b) => b.slug === currentBrandSlug) ?? BRANDS[0];
-  const email = user.email ?? "";
-  const initials = email[0].toUpperCase();
+  const name = (user.user_metadata?.name as string | undefined) ?? user.email ?? "";
+  const initials = name[0].toUpperCase();
 
   function isActive(path: string) {
     const base = `/admin/${currentBrandSlug}`;
@@ -114,8 +114,8 @@ export default function Sidebar({
           {initials}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-[14px] truncate">{email}</div>
-          <div className="text-[12px] text-[#737373]">Admin</div>
+          <div className="text-[14px] truncate">{name}</div>
+          <div className="text-[12px] text-[#737373] truncate">{user.email}</div>
         </div>
         <form action={signOut}>
           <button

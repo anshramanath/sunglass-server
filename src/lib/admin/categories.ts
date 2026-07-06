@@ -15,7 +15,7 @@ export async function getCategories(brandSlug: string): Promise<FlatCategory[]> 
     .eq("brand_slug", brandSlug)
     .order("sort_order");
 
-  if (error || !data) throw new Error(`Failed to fetch categories: ${error?.message}`);
+  if (error) throw new Error("Failed to fetch categories");
 
   const nodeMap: Record<string, string[]> = {};
   for (const c of data) nodeMap[c.id] = [];

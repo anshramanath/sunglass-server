@@ -13,9 +13,7 @@ export async function getAnalyticsSummary(brandSlug: string) {
     supabase.from("orders").select("order_items(quantity)").eq("brand_slug", brandSlug).in("status", ["processing", "shipped", "delivered"]),
   ]);
 
-  if (productsRes.error) throw new Error(productsRes.error.message);
-  if (categoriesRes.error) throw new Error(categoriesRes.error.message);
-  if (ordersRes.error) throw new Error(ordersRes.error.message);
+  if (productsRes.error || categoriesRes.error || ordersRes.error) throw new Error("Failed to fetch analytics summary");
 
   const productViews = (productsRes.data ?? []).reduce((sum, p) => sum + (p.view_count ?? 0), 0);
   const categoryViews = (categoriesRes.data ?? []).reduce((sum, c) => sum + (c.view_count ?? 0), 0);
@@ -34,7 +32,7 @@ export async function getTopProductViews(brandSlug: string, totalViews: number):
     .select("name, view_count")
     .eq("brand_slug", brandSlug);
 
-  if (error) throw new Error(error.message);
+  if (error) throw new Error("Failed to fetch analytics");
 
   return [...(data ?? [])]
     .filter((p) => (p.view_count) > 0)
@@ -56,7 +54,7 @@ export async function getTopCategoryViews(brandSlug: string, totalViews: number)
     .select("name, view_count")
     .eq("brand_slug", brandSlug);
 
-  if (error) throw new Error(error.message);
+  if (error) throw new Error("Failed to fetch analytics");
 
   return [...(data ?? [])]
     .filter((c) => (c.view_count ?? 0) > 0)
@@ -79,7 +77,7 @@ export async function getTopProductSales(brandSlug: string, unitsSold: number): 
     .eq("brand_slug", brandSlug)
     .in("status", ["processing", "shipped", "delivered"]);
 
-  if (error) throw new Error(error.message);
+  if (error) throw new Error("Failed to fetch analytics");
 
   const salesByKey: Record<string, { name: string; sku: string; units: number }> = {};
   for (const order of data ?? []) {
