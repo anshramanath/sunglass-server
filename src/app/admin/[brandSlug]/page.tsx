@@ -65,7 +65,7 @@ export default async function OverviewPage({
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 1, background: "#e5e5e5" }}>
           {orderRows.map((stat) => (
             <div key={stat.label} style={{ background: "#ffffff", padding: "22px 20px" }}>
-              <div style={{ fontSize: 32, fontWeight: 400, lineHeight: 1 }}>{stat.value}</div>
+              <div style={{ fontSize: 32, fontWeight: 400, lineHeight: 1, color: stat.label === "Revenue" ? accent : undefined }}>{stat.value}</div>
               <div style={{ fontSize: 13, color: "#737373", marginTop: 8 }}>{stat.label}</div>
             </div>
           ))}
