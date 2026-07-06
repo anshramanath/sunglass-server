@@ -26,6 +26,19 @@ export type Order = {
   items: OrderItem[];
 };
 
+export type FlatCategory = {
+  id: string;
+  name: string;
+  slug: string;
+  sortOrder: number;
+  viewCount: number | null;
+  productCount: number;
+  depth: number;
+  hasChildren: boolean;
+  isLeaf: boolean;
+  ancestorIds: string[];
+};
+
 export type CategoryNode = {
   id: string;
   name: string;

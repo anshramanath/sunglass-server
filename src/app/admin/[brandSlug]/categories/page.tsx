@@ -1,3 +1,31 @@
-export default function CategoriesPage() {
-  return <div>Categories</div>;
+import { getCategories } from "@/lib/admin/categories";
+import { getBrandBySlug } from "@/lib/brand";
+import CategoriesTree from "./categories-tree";
+
+export default async function CategoriesPage({
+  params,
+}: {
+  params: Promise<{ brandSlug: string }>;
+}) {
+  const { brandSlug } = await params;
+  const brand = getBrandBySlug(brandSlug);
+  const brandName = brand?.name ?? brandSlug;
+  const accent = brand?.accent ?? "#000000";
+
+  const tree = await getCategories(brandSlug);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
+      <div>
+        <div style={{ fontSize: 13, fontWeight: 500, letterSpacing: "0.10em", textTransform: "uppercase", color: "#737373", marginBottom: 6 }}>
+          {brandName}
+        </div>
+        <div style={{ fontSize: 34, fontWeight: 400, lineHeight: 1.05, letterSpacing: "-0.01em" }}>
+          Categories
+        </div>
+      </div>
+
+      <CategoriesTree rows={tree} accent={accent} />
+    </div>
+  );
 }
