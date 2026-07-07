@@ -38,6 +38,7 @@ export default async function ProductsPage({
       </div>
 
       <ProductsList
+        key={`${brandSlug}-${search}-${category}`}
         accent={accent}
         initialProducts={products}
         initialHasMore={hasMore}
