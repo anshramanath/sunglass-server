@@ -214,6 +214,48 @@ create trigger order_items_update_total_sales
   for each row execute function update_total_sales();
 
 
+create or replace function decrement_total_sales_on_refund()
+returns trigger
+language plpgsql
+as $$
+declare
+  v_item record;
+  v_variation_id uuid;
+begin
+  if new.status not in ('refunded', 'partially_refunded') then
+    return new;
+  end if;
+  if old.status in ('refunded', 'partially_refunded') then
+    return new;
+  end if;
+
+  for v_item in
+    select product_slug, sku, quantity from order_items where order_id = new.id
+  loop
+    select v.id into v_variation_id
+    from variations v
+    join products p on p.id = v.product_id
+    where p.slug = v_item.product_slug
+      and p.brand_slug = new.brand_slug
+      and v.sku = v_item.sku;
+
+    if v_variation_id is not null then
+      update variations set total_sales = total_sales - v_item.quantity where id = v_variation_id;
+    else
+      update products set total_sales = total_sales - v_item.quantity
+      where slug = v_item.product_slug and brand_slug = new.brand_slug and sku = v_item.sku;
+    end if;
+  end loop;
+
+  return new;
+end;
+$$;
+
+create trigger orders_decrement_total_sales_on_refund
+  after update on orders
+  for each row execute function decrement_total_sales_on_refund();
+
+
 create or replace function increment_category_view(p_id uuid, p_brand_slug text)
 returns void language sql as $$
   update categories
