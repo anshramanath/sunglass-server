@@ -83,7 +83,7 @@ export default function ProductsList({
             style={{ height: 44, border: "1px solid #000000", padding: "0 18px", fontSize: 14, background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, cursor: "pointer", userSelect: "none", boxSizing: "border-box" }}
           >
             <span style={{ color: accent }}>{selectedCategory?.name ?? "All categories"}</span>
-            <span style={{ fontSize: 11, transform: dropdownOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 120ms" }}>▾</span>
+            <span style={{ fontSize: 11, transform: dropdownOpen ? "rotate(0deg)" : "rotate(180deg)", transition: "transform 120ms" }}>▾</span>
           </div>
           {dropdownOpen && (
             <>

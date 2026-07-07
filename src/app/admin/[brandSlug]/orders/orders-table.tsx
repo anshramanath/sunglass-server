@@ -107,7 +107,7 @@ export default function OrdersTable({ orders, accent }: { orders: Order[]; accen
                 <span style={{ width: 6, height: 6, borderRadius: "50%", background: sc, flexShrink: 0 }} />
                 {STATUS_LABEL[o.status] ?? o.status}
               </div>
-              <div style={{ fontSize: 16, color: "#737373", textAlign: "center", transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 120ms" }}>
+              <div style={{ fontSize: 16, color: "#737373", textAlign: "center", transform: isExpanded ? "rotate(0deg)" : "rotate(180deg)", transition: "transform 120ms" }}>
                 ⌄
               </div>
             </div>
