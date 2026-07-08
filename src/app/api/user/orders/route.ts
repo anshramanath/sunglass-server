@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await supabase
     .from("orders")
-    .select("id, status, total_cents, refunded_cents, shipping_address, created_at, order_items(id, product_slug, name, image_src, price_cents, quantity, attribute)")
+    .select("id, status, total_cents, refunded_cents, carrier, tracking_number, shipping_address, created_at, order_items(id, product_slug, name, image_src, price_cents, quantity, attribute)")
     .eq("brand_slug", brandSlug)
     .order("created_at", { ascending: false });
 
@@ -26,6 +26,8 @@ export async function POST(req: NextRequest) {
     status: order.status,
     totalCents: order.total_cents,
     refundedCents: order.refunded_cents,
+    carrier: order.carrier,
+    trackingNumber: order.tracking_number,
     shippingAddress: order.shipping_address,
     createdAt: order.created_at,
     items: (order.order_items ?? []).map((item) => ({
