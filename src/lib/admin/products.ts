@@ -2,7 +2,8 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth";
-import type { AdminProduct, CategoryOption } from "@/lib/types";
+import { collectLeaves } from "@/lib/utils";
+import type { AdminProduct, CategoryNode, CategoryOption } from "@/lib/types";
 
 const PAGE_SIZE = 10;
 
@@ -86,9 +87,20 @@ export async function getCategoryOptions(brandSlug: string): Promise<CategoryOpt
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("categories")
-    .select("id, name")
+    .select("id, name, slug, parent_id")
     .eq("brand_slug", brandSlug)
     .order("name");
+    
   if (error) throw new Error("Failed to fetch category options");
-  return data ?? [];
+
+  const nodeMap = new Map<string, CategoryNode>();
+  for (const c of data) nodeMap.set(c.id, { id: c.id, name: c.name, slug: c.slug });
+  for (const c of data) {
+    if (c.parent_id) {
+      const parent = nodeMap.get(c.parent_id);
+      if (parent) (parent.children ??= []).push(nodeMap.get(c.id)!);
+    }
+  }
+  const roots = data.filter((c) => !c.parent_id).map((c) => nodeMap.get(c.id)!);
+  return Object.values(collectLeaves(roots)).map((l) => ({ id: l.id, name: l.name }));
 }
