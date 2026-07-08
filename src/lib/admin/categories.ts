@@ -1,3 +1,5 @@
+"use server";
+
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth";
 import type { FlatCategory } from "@/lib/types";

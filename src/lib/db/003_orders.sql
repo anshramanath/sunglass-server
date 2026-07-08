@@ -92,10 +92,10 @@ declare
   v_item record;
   v_variation_id uuid;
 begin
-  if new.status not in ('refunded', 'partially_refunded') then
+  if coalesce(new.refunded_cents, 0) <= 0 then
     return new;
   end if;
-  if old.status in ('refunded', 'partially_refunded') then
+  if old.refunded_cents > 0 then
     return new;
   end if;
 

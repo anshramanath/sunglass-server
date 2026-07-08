@@ -93,13 +93,15 @@ export async function POST(req: NextRequest) {
       const paymentIntent = typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
       if (!paymentIntent) return new Response("Missing payment intent", { status: 400 });
 
+      if (!(charge.amount_refunded > 0)) return new Response("OK", { status: 200 });
+
       const isFullRefund = charge.amount_refunded === charge.amount;
 
       const { error } = await supabase
         .from("orders")
         .update({
           refunded_cents: charge.amount_refunded,
-          status: isFullRefund ? "refunded" : "partially_refunded",
+          ...(isFullRefund && { status: "refunded" }),
         })
         .eq("stripe_payment_intent", paymentIntent);
 

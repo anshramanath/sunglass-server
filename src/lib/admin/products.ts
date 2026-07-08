@@ -1,8 +1,10 @@
+"use server";
+
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth";
 import type { AdminProduct, CategoryOption } from "@/lib/types";
 
-export const PAGE_SIZE = 10;
+const PAGE_SIZE = 10;
 
 export async function getProducts(
   brandSlug: string,

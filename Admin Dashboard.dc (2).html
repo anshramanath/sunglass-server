@@ -197,7 +197,7 @@
 
                 <sc-if value="{{ o.expanded }}" hint-placeholder-val="{{ false }}">
                   <div style="background:var(--grey-50); padding:24px 24px 28px; margin-bottom:8px;">
-                    <div style="display:grid; grid-template-columns:{{ o.detailColumns }}; gap:32px; margin-bottom:24px;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:32px; margin-bottom:24px;">
                       <div>
                         <div style="font-size:12px; font-weight:500; letter-spacing:0.06em; text-transform:uppercase; color:var(--grey-500); margin-bottom:10px;">Shipping address</div>
                         <div style="font-size:14px; line-height:1.6;">
@@ -211,13 +211,33 @@
                       <div>
                         <div style="font-size:12px; font-weight:500; letter-spacing:0.06em; text-transform:uppercase; color:var(--grey-500); margin-bottom:10px;">Payment</div>
                         <div style="font-size:14px; color:var(--grey-500); font-family:monospace;">{{ o.paymentIntent }}</div>
-                      </div>
-                      <sc-if value="{{ o.refundedDisplay }}" hint-placeholder-val="{{ false }}">
-                        <div>
-                          <div style="font-size:12px; font-weight:500; letter-spacing:0.06em; text-transform:uppercase; color:var(--grey-500); margin-bottom:10px;">Refunded</div>
+                        <sc-if value="{{ o.refundedDisplay }}" hint-placeholder-val="{{ false }}">
+                          <div style="font-size:12px; font-weight:500; letter-spacing:0.06em; text-transform:uppercase; color:{{ o.statusColor }}; margin-top:18px; margin-bottom:10px;">Refunded</div>
                           <div style="font-size:14px; color:{{ o.statusColor }};">{{ o.refundedDisplay }}</div>
+                        </sc-if>
+                      </div>
+                      <div>
+                        <div style="font-size:12px; font-weight:500; letter-spacing:0.06em; text-transform:uppercase; color:var(--grey-500); margin-bottom:10px;">Fulfillment</div>
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                          <div style="position:relative;">
+                            <div onClick="{{ o.fulfillment.toggleCarrier }}" style="height:38px; width:100%; border:1px solid var(--aritzia-black); padding:0 12px; font-family:var(--font-sans); font-size:13px; background:var(--aritzia-white); display:flex; align-items:center; justify-content:space-between; gap:8px; cursor:pointer; user-select:none; box-sizing:border-box;">
+                              <span>{{ o.fulfillment.carrierLabel }}</span>
+                              <span style="font-size:10px; transform:{{ o.fulfillment.carrierChevron }}; transition:transform 120ms;">▾</span>
+                            </div>
+                            <sc-if value="{{ o.fulfillment.carrierDropdownOpen }}" hint-placeholder-val="{{ false }}">
+                              <div style="position:absolute; top:40px; left:0; width:100%; background:var(--aritzia-white); border:1px solid var(--aritzia-black); z-index:10; box-sizing:border-box;">
+                                <sc-for list="{{ o.fulfillment.carrierOptions }}" as="c" hint-placeholder-count="4">
+                                  <div onClick="{{ c.select }}" style="{{ c.rowStyle }}">{{ c.label }}</div>
+                                </sc-for>
+                              </div>
+                            </sc-if>
+                          </div>
+                          <input value="{{ o.fulfillment.tracking }}" onChange="{{ o.fulfillment.setTracking }}" placeholder="Tracking number" style="height:38px; width:100%; box-sizing:border-box; font-size:13px; border:1px solid var(--color-border-input); padding:0 12px; font-family:var(--font-sans); color:var(--aritzia-black); outline:none;" style-focus="outline:2px solid var(--aritzia-black); outline-offset:2px; border-color:var(--aritzia-black);" />
+                          <sc-if value="{{ o.fulfillment.summary }}" hint-placeholder-val="{{ false }}">
+                            <div style="font-size:12px; color:var(--grey-500);">{{ o.fulfillment.summary }}</div>
+                          </sc-if>
                         </div>
-                      </sc-if>
+                      </div>
                     </div>
 
                     <div style="font-size:12px; font-weight:500; letter-spacing:0.06em; text-transform:uppercase; color:var(--grey-500); margin-bottom:10px;">Items</div>
@@ -252,11 +272,11 @@
         <sc-if value="{{ hasAnyProducts }}" hint-placeholder-val="{{ true }}">
           <div>
             <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:24px; flex-wrap:wrap;">
-              <div style="display:flex; align-items:center; gap:0; width:400px; height:44px; flex:none;">
+              <div style="display:flex; align-items:center; gap:0; width:320px; height:44px; flex:none;">
                 <x-import component-from-global-scope="AritziaDesignSystem_fb1eba.Input" placeholder="Search by name or SKU" value="{{ productSearchDraft }}" onChange="{{ onProductSearchDraft }}" onKeyDown="{{ onProductSearchKeyDown }}" dc-props="{{ searchInputProps }}" style="flex:1; min-width:0; height:44px;" hint-size="auto,44px"></x-import>
                 <x-import component-from-global-scope="AritziaDesignSystem_fb1eba.Button" variant="primary" onClick="{{ applyProductSearch }}" dc-props="{{ searchButtonProps }}" style="height:44px;" hint-size="auto,44px"><span style="white-space:nowrap;">Search</span></x-import>
               </div>
-              <div style="position:relative; width:180px; flex:none;">
+              <div style="position:relative; width:160px; flex:none;">
                 <div onClick="{{ toggleCategoryDropdown }}" style="height:44px; width:100%; border:1px solid var(--aritzia-black); padding:0 18px; font-family:var(--font-sans); font-size:14px; background:var(--aritzia-white); display:flex; align-items:center; justify-content:space-between; gap:10px; cursor:pointer; user-select:none; box-sizing:border-box;">
                   <span>{{ categoryDropdownLabel }}</span>
                   <span style="font-size:11px; transform:{{ categoryDropdownChevron }}; transition:transform 120ms;">▾</span>
@@ -837,6 +857,8 @@ class Component extends DCLogic {
     productCategory: 'all',
     categoryDropdownOpen: false,
     productPageSize: 6,
+    orderFulfillment: {},
+    openCarrierDropdown: null,
     collapsedCats: {},
     selectedProductId: null,
     products: JSON.parse(JSON.stringify(this.seedProducts))
@@ -882,7 +904,39 @@ class Component extends DCLogic {
     return map[status] || { label: status, color: 'var(--grey-500)' };
   }
 
+  carrierOptions = ['UPS', 'FedEx', 'USPS', 'Canada Post', 'DHL'];
+
   toggleOrder(id) { this.setState(s => ({ expandedOrder: s.expandedOrder === id ? null : id })); }
+  setOrderCarrier(orderId, carrier) {
+    this.setState(s => ({ orderFulfillment: { ...s.orderFulfillment, [orderId]: { ...(s.orderFulfillment[orderId] || {}), carrier } }, openCarrierDropdown: null }));
+  }
+  setOrderTracking(orderId, tracking) {
+    this.setState(s => ({ orderFulfillment: { ...s.orderFulfillment, [orderId]: { ...(s.orderFulfillment[orderId] || {}), tracking } } }));
+  }
+  toggleCarrierDropdown(orderId) {
+    this.setState(s => ({ openCarrierDropdown: s.openCarrierDropdown === orderId ? null : orderId }));
+  }
+  buildFulfillment(orderId, accent) {
+    const s = this.state;
+    const entry = s.orderFulfillment[orderId] || {};
+    const carrier = entry.carrier || '';
+    const tracking = entry.tracking || '';
+    const isOpen = s.openCarrierDropdown === orderId;
+    return {
+      carrierLabel: carrier || 'Select carrier',
+      carrierDropdownOpen: isOpen,
+      carrierChevron: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+      toggleCarrier: () => this.toggleCarrierDropdown(orderId),
+      carrierOptions: this.carrierOptions.map(c => ({
+        label: c,
+        select: () => this.setOrderCarrier(orderId, c),
+        rowStyle: `padding:9px 12px; font-size:13px; cursor:pointer; background:${carrier === c ? accent : 'var(--aritzia-white)'}; color:${carrier === c ? 'var(--aritzia-white)' : 'var(--aritzia-black)'};`
+      })),
+      tracking,
+      setTracking: (e) => this.setOrderTracking(orderId, e.target.value),
+      summary: (carrier && tracking) ? `${carrier} · ${tracking}` : ''
+    };
+  }
   toggleCat(id) { this.setState(s => ({ collapsedCats: { ...s.collapsedCats, [id]: !s.collapsedCats[id] } })); }
   selectProduct(id) { this.setState({ selectedProductId: id }); }
   backToProducts() { this.setState({ selectedProductId: null }); }
@@ -1147,7 +1201,7 @@ class Component extends DCLogic {
         },
         paymentIntent: o.paymentIntent,
         refundedDisplay: o.refunded != null ? this.fmt(o.refunded) : '',
-        detailColumns: o.refunded != null ? '1fr 1fr 1fr' : '1fr 1fr',
+        fulfillment: this.buildFulfillment(o.id, brandAccent),
         lineItems: o.items.map((it, idx) => ({
           name: it.name, sku: it.sku, attribute: it.attribute, quantity: it.quantity,
           dividerStyle: idx === 0 ? 'none' : '1px solid var(--color-border)',

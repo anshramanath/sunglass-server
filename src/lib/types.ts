@@ -8,6 +8,7 @@ export type RankedRow = {
 export type OrderItem = {
   id: string;
   name: string;
+  sku: string;
   imageSrc: string | null;
   priceCents: number;
   quantity: number;
@@ -19,6 +20,8 @@ export type Order = {
   status: string;
   totalCents: number;
   refundedCents: number;
+  carrier: string | null;
+  trackingNumber: string | null;
   shippingAddress: {
     name: string;
     line1: string;
