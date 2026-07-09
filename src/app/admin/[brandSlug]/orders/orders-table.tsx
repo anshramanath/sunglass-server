@@ -180,9 +180,6 @@ export default function OrdersTable({
                     <div style={{ fontSize: 12, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase", color: "#737373", marginBottom: 10 }}>Fulfillment</div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       <div style={{ position: "relative" }}>
-                        {carrierOpen && (
-                          <div onClick={() => setCarrierOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 9 }} />
-                        )}
                         <div
                           onClick={() => !isShipped && setCarrierOpen(!carrierOpen)}
                           style={{ height: 38, border: "1px solid #000000", padding: "0 12px", fontSize: 13, background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, cursor: isShipped ? "default" : "pointer", userSelect: "none", boxSizing: "border-box", opacity: isShipped ? 0.5 : 1 }}
@@ -191,17 +188,20 @@ export default function OrdersTable({
                           <span style={{ fontSize: 10, transform: carrierOpen ? "rotate(0deg)" : "rotate(180deg)", transition: "transform 120ms" }}>▾</span>
                         </div>
                         {carrierOpen && (
-                          <div style={{ position: "absolute", top: 40, left: 0, width: "100%", background: "#ffffff", border: "1px solid #000000", zIndex: 10, boxSizing: "border-box" }}>
-                            {CARRIERS.map((c) => (
-                              <div
-                                key={c}
-                                onClick={() => setCarrier(o.id, c)}
-                                style={{ padding: "9px 12px", fontSize: 13, cursor: "pointer", background: o.carrier === c ? accent : "#ffffff", color: o.carrier === c ? "#ffffff" : "#000000" }}
-                              >
-                                {c}
-                              </div>
-                            ))}
-                          </div>
+                          <>
+                            <div onClick={() => setCarrierOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 9 }} />
+                            <div style={{ position: "absolute", top: 40, left: 0, width: "100%", background: "#ffffff", border: "1px solid #000000", zIndex: 10, boxSizing: "border-box" }}>
+                              {CARRIERS.map((c) => (
+                                <div
+                                  key={c}
+                                  onClick={() => setCarrier(o.id, c)}
+                                  style={{ padding: "9px 12px", fontSize: 13, cursor: "pointer", background: o.carrier === c ? accent : "#ffffff", color: o.carrier === c ? "#ffffff" : "#000000" }}
+                                >
+                                  {c}
+                                </div>
+                              ))}
+                            </div>
+                          </>
                         )}
                       </div>
 

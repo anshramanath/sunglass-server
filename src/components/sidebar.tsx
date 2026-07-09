@@ -1,10 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import type { User } from "@supabase/supabase-js";
 import { signOut } from "@/lib/auth";
 import { getAllBrands } from "@/lib/brand";
+import { NavProgress } from "@/components/nav-progress";
 
 const BRANDS = getAllBrands();
 
@@ -25,10 +27,18 @@ export default function Sidebar({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [navigating, setNavigating] = useState(false);
+
+  useEffect(() => { setNavigating(false); }, [pathname]);
 
   const currentBrand = BRANDS.find((b) => b.slug === currentBrandSlug) ?? BRANDS[0];
   const name = (user.user_metadata?.name as string | undefined) ?? user.email ?? "";
   const initials = name[0].toUpperCase();
+
+  function navigate(path: string) {
+    setNavigating(true);
+    router.push(path);
+  }
 
   function isActive(path: string) {
     const base = `/admin/${currentBrandSlug}`;
@@ -37,6 +47,7 @@ export default function Sidebar({
 
   return (
     <aside className="w-[264px] flex-none sticky top-0 h-screen overflow-y-auto bg-white border-r border-[#e5e5e5] flex flex-col px-5 py-7 box-border">
+      <NavProgress active={navigating} accent={currentBrand.accent} />
       <div className="h-10 mb-5 flex items-center pl-1">
         <Image
           src={currentBrand.logo}
@@ -54,7 +65,7 @@ export default function Sidebar({
             return (
               <div
                 key={brand.slug}
-                onClick={() => router.push(`/admin/${brand.slug}`)}
+                onClick={() => !active && navigate(`/admin/${brand.slug}`)}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -91,7 +102,7 @@ export default function Sidebar({
           return (
             <div
               key={label}
-              onClick={() => router.push(`/admin/${currentBrandSlug}${path}`)}
+              onClick={() => !active && navigate(`/admin/${currentBrandSlug}${path}`)}
               style={{
                 padding: "11px 12px",
                 fontSize: 14,

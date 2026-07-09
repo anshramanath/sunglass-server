@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { formatPrice } from "@/lib/utils";
 import type { AdminProduct, CategoryOption } from "@/lib/types";
+import { NavProgress } from "@/components/nav-progress";
 
 const GRID = "56px 2fr 80px 1.2fr 1fr 90px 90px";
 
@@ -26,14 +27,17 @@ export default function ProductsList({
   loadMore: (search: string, categoryId: string, offset: number) => Promise<{ products: AdminProduct[]; hasMore: boolean }>;
 }) {
   const router = useRouter();
+  const [navigating, setNavigating] = useState(false);
   const [search, setSearch] = useState(initialSearch);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [products, setProducts] = useState(initialProducts);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [loading, setLoading] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { setNavigating(false); }, [initialSearch, categoryId]);
 
   function applySearch() {
+    setNavigating(true);
     const params = new URLSearchParams();
     if (search.trim()) params.set("search", search.trim());
     if (categoryId) params.set("category", categoryId);
@@ -42,6 +46,7 @@ export default function ProductsList({
 
   function applyCategory(id: string) {
     setDropdownOpen(false);
+    setNavigating(true);
     const params = new URLSearchParams();
     if (initialSearch) params.set("search", initialSearch);
     if (id) params.set("category", id);
@@ -50,34 +55,38 @@ export default function ProductsList({
 
   async function handleLoadMore() {
     setLoading(true);
+    setNavigating(true);
     const result = await loadMore(initialSearch, categoryId, products.length);
     setProducts((prev) => [...prev, ...result.products]);
     setHasMore(result.hasMore);
     setLoading(false);
+    setNavigating(false);
   }
 
   const selectedCategory = categories.find((c) => c.id === categoryId);
 
   return (
     <div>
+      <NavProgress active={navigating} accent={accent} />
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, width: 400, height: 44, flexShrink: 0 }}>
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && applySearch()}
+            onKeyDown={(e) => e.key === "Enter" && search.trim() !== initialSearch && applySearch()}
             placeholder="Search by name or SKU"
             style={{ flex: 1, height: 44, border: "1px solid #000000", padding: "0 14px", fontSize: 14, fontFamily: "inherit", outline: "none", minWidth: 0, boxSizing: "border-box" }}
           />
           <button
             onClick={applySearch}
-            style={{ height: 44, padding: "0 18px", background: accent, color: "#ffffff", border: "none", fontSize: 14, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
+            disabled={search.trim() === initialSearch}
+            style={{ height: 44, padding: "0 18px", background: accent, color: "#ffffff", border: "none", fontSize: 14, fontWeight: 500, cursor: search.trim() === initialSearch ? "default" : "pointer", opacity: search.trim() === initialSearch ? 0.4 : 1, whiteSpace: "nowrap", flexShrink: 0 }}
           >
             Search
           </button>
         </div>
 
-        <div ref={dropdownRef} style={{ position: "relative", width: 220, flexShrink: 0 }}>
+        <div style={{ position: "relative", width: 220, flexShrink: 0 }}>
           <div
             onClick={() => setDropdownOpen((o) => !o)}
             style={{ height: 44, border: "1px solid #000000", padding: "0 18px", fontSize: 14, background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, cursor: "pointer", userSelect: "none", boxSizing: "border-box" }}
@@ -90,16 +99,16 @@ export default function ProductsList({
               <div onClick={() => setDropdownOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 9 }} />
               <div style={{ position: "absolute", top: 46, right: 0, width: "100%", background: "#ffffff", border: "1px solid #000000", zIndex: 10, boxSizing: "border-box", maxHeight: 320, overflowY: "auto" }}>
               <div
-                onClick={() => applyCategory("")}
-                style={{ padding: "10px 18px", fontSize: 14, cursor: "pointer", background: !categoryId ? accent : "#ffffff", color: !categoryId ? "#ffffff" : "#000000" }}
+                onClick={() => categoryId && applyCategory("")}
+                style={{ padding: "10px 18px", fontSize: 14, cursor: !categoryId ? "default" : "pointer", background: !categoryId ? accent : "#ffffff", color: !categoryId ? "#ffffff" : "#000000" }}
               >
                 All categories
               </div>
               {categories.map((c) => (
                 <div
                   key={c.id}
-                  onClick={() => applyCategory(c.id)}
-                  style={{ padding: "10px 18px", fontSize: 14, cursor: "pointer", background: c.id === categoryId ? accent : "#ffffff", color: c.id === categoryId ? "#ffffff" : "#000000" }}
+                  onClick={() => c.id !== categoryId && applyCategory(c.id)}
+                  style={{ padding: "10px 18px", fontSize: 14, cursor: c.id === categoryId ? "default" : "pointer", background: c.id === categoryId ? accent : "#ffffff", color: c.id === categoryId ? "#ffffff" : "#000000" }}
                 >
                   {c.name}
                 </div>
