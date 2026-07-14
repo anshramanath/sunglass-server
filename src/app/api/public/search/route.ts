@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await supabase
     .from("products")
-    .select("id, name, slug, min_price_cents, max_price_cents, sale_price_cents, featured, sale, product_images!inner(src, name, sort_order)")
+    .select("id, name, slug, sku, min_price_cents, max_price_cents, sale_price_cents, featured, sale, product_images!inner(src, name, sort_order)")
     .eq("brand_slug", brandSlug)
     .ilike("name", `%${search}%`)
     .limit(6);
@@ -28,6 +28,7 @@ export async function GET(req: NextRequest) {
       id: p.id,
       name: p.name,
       slug: p.slug,
+      sku: p.sku,
       minPriceCents: p.min_price_cents,
       maxPriceCents: p.max_price_cents,
       salePriceCents: p.sale_price_cents,

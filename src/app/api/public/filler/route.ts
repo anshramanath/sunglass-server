@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
   const { data, error } = await supabase
     .from("products")
     .select(`
-      id, name, slug, featured, sale, min_price_cents, max_price_cents, sale_price_cents,
+      id, name, slug, sku, featured, sale, min_price_cents, max_price_cents, sale_price_cents,
       product_images!inner(src, name, sort_order),
       variations(id, attribute,
         variation_images(src, name, sort_order)
@@ -54,6 +54,7 @@ export async function GET(req: NextRequest) {
       id: p.id,
       name: p.name,
       slug: p.slug,
+      sku: p.sku,
       minPriceCents: p.min_price_cents,
       maxPriceCents: p.max_price_cents,
       salePriceCents: p.sale_price_cents,
