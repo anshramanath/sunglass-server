@@ -46,16 +46,16 @@ export async function getOrderStats(brandSlug: string) {
 
   const { data: orders, error } = await supabase
     .from("orders")
-    .select("status, total_cents")
+    .select("status, total_cents, refunded_cents")
     .eq("brand_slug", brandSlug);
 
   if (error) throw new Error("Failed to fetch order stats");
 
   return {
     active: orders.filter((o) => o.status === "processing").length,
-    completed: orders.filter((o) => ["shipped", "delivered"].includes(o.status)).length,
-    revenue: orders.filter((o) => ["shipped", "delivered"].includes(o.status)).reduce((sum, o) => sum + o.total_cents, 0),
-    refunded: orders.filter((o) => ["refunded", "partially_refunded"].includes(o.status)).length,
+    completed: orders.filter((o) => o.status === "shipped").length,
+    revenue: orders.filter((o) => o.status !== "refunded").reduce((sum, o) => sum + o.total_cents - (o.refunded_cents ?? 0), 0),
+    refunded: orders.filter((o) => o.status === "refunded").length,
   };
 }
 
