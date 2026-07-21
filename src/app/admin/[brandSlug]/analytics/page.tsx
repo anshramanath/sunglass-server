@@ -14,7 +14,7 @@ function RankedList({ rows, accent }: { rows: RankedRow[]; accent: string }) {
   return (
     <div>
       {rows.map((r, i) => (
-        <div key={r.name} style={{ padding: "12px 0", borderBottom: "1px solid #e5e5e5" }}>
+        <div key={i} style={{ padding: "12px 0", borderBottom: "1px solid #e5e5e5" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 8 }}>
             <div style={{ display: "flex", gap: 12, alignItems: "center", minWidth: 0, flex: 1 }}>
               <span style={{ width: 22, height: 22, borderRadius: "50%", border: `1px solid ${accent}`, color: accent, fontSize: 11, fontWeight: 500, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>

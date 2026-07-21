@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { formatPrice } from "@/lib/utils";
 import type { AdminProduct, CategoryOption } from "@/lib/types";
 import { NavProgress } from "@/components/nav-progress";
+import { getProducts } from "@/lib/admin/products";
 
 const GRID = "56px 2fr 80px 1.2fr 1fr 90px 90px";
 
@@ -16,7 +17,6 @@ export default function ProductsList({
   categories,
   initialSearch,
   categoryId,
-  loadMore,
 }: {
   accent: string;
   initialProducts: AdminProduct[];
@@ -24,9 +24,9 @@ export default function ProductsList({
   categories: CategoryOption[];
   initialSearch: string;
   categoryId: string;
-  loadMore: (search: string, categoryId: string, offset: number) => Promise<{ products: AdminProduct[]; hasMore: boolean }>;
 }) {
   const router = useRouter();
+  const { brandSlug } = useParams<{ brandSlug: string }>();
   const [navigating, setNavigating] = useState(false);
   const [search, setSearch] = useState(initialSearch);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -56,7 +56,7 @@ export default function ProductsList({
   async function handleLoadMore() {
     setLoading(true);
     setNavigating(true);
-    const result = await loadMore(initialSearch, categoryId, products.length);
+    const result = await getProducts(brandSlug, { search: initialSearch || undefined, categoryId: categoryId || undefined, offset: products.length });
     setProducts((prev) => [...prev, ...result.products]);
     setHasMore(result.hasMore);
     setLoading(false);
@@ -86,6 +86,13 @@ export default function ProductsList({
           </button>
         </div>
 
+        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+        <button
+          onClick={() => { setNavigating(true); router.push(`/admin/${brandSlug}/products/new`); }}
+          style={{ height: 44, padding: "0 18px", background: accent, color: "#fff", border: "none", fontSize: 14, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit" }}
+        >
+          + New product
+        </button>
         <div style={{ position: "relative", width: 220, flexShrink: 0 }}>
           <div
             onClick={() => setDropdownOpen((o) => !o)}
@@ -117,6 +124,7 @@ export default function ProductsList({
             </>
           )}
         </div>
+        </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: GRID, gap: 16, padding: "0 0 10px", borderBottom: "1px solid #000000", fontSize: 12, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase", color: "#737373" }}>
@@ -131,7 +139,7 @@ export default function ProductsList({
 
       <>
         {products.map((p) => (
-            <div key={p.id} style={{ display: "grid", gridTemplateColumns: GRID, gap: 16, alignItems: "center", padding: "14px 0", borderBottom: "1px solid #e5e5e5" }}>
+            <div key={p.id} onClick={() => { setNavigating(true); router.push(`/admin/${brandSlug}/products/${p.id}`); }} style={{ display: "grid", gridTemplateColumns: GRID, gap: 16, alignItems: "center", padding: "14px 0", borderBottom: "1px solid #e5e5e5", cursor: "pointer" }}>
               <Image src={p.image} alt={p.name} width={44} height={56} style={{ objectFit: "cover", background: "#f5f5f5" }} />
               <div style={{ fontSize: 15 }}>{p.name}</div>
               <div style={{ fontSize: 13, color: "#737373" }}>

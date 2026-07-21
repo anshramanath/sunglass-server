@@ -13,6 +13,10 @@ function collectLeavesHelper(nodes: CategoryNode[], slugPath: string[], namePath
   }
 }
 
+export function slugify(str: string): string {
+  return str.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
 export function formatPrice(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`;
 }

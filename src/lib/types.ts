@@ -81,3 +81,47 @@ export type CategoryOption = {
   id: string;
   name: string;
 };
+
+export type ProductDetailAttribute = {
+  name: string;
+  option: string;
+  value?: string;
+};
+
+export type ProductDetailVariation = {
+  id: string;
+  sku: string;
+  regularPriceCents: number;
+  salePriceCents: number | null;
+  sale: boolean;
+  attribute: ProductDetailAttribute[];
+  images: { src: string; name: string; sortOrder: number }[];
+};
+
+export type ProductDetailData = {
+  id: string;
+  name: string;
+  slug: string;
+  sku: string | null;
+  description: string;
+  summary: string[];
+  featured: boolean;
+  sale: boolean;
+  minPriceCents: number;
+  salePriceCents: number | null;
+  categoryIds: string[];
+  images: { src: string; name: string; sortOrder: number }[];
+  variations: ProductDetailVariation[];
+};
+
+export type FormImage = { src: string; name: string; sortOrder: number };
+export type FormAttr = { name: string; option: string; value?: string };
+export type FormVariation = {
+  id: string;
+  sku: string;
+  regularPrice: string;
+  salePrice: string;
+  sale: boolean;
+  attrs: FormAttr[];
+  images: FormImage[];
+};

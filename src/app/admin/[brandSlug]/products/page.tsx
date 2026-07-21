@@ -21,11 +21,6 @@ export default async function ProductsPage({
     getCategoryOptions(brandSlug),
   ]);
 
-  async function loadMore(search: string, categoryId: string, offset: number) {
-    "use server";
-    return getProducts(brandSlug, { search: search || undefined, categoryId: categoryId || undefined, offset });
-  }
-
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
       <div>
@@ -45,7 +40,6 @@ export default async function ProductsPage({
         categories={categories}
         initialSearch={search}
         categoryId={category}
-        loadMore={loadMore}
       />
     </div>
   );

@@ -57,19 +57,32 @@ export async function getTopCategoryViews(brandSlug: string, totalViews: number)
 
   const { data, error } = await supabase
     .from("categories")
-    .select("name, view_count")
-    .eq("brand_slug", brandSlug)
-    .gt("view_count", 0)
-    .order("view_count", { ascending: false })
-    .limit(5);
+    .select("id, name, parent_id, view_count")
+    .eq("brand_slug", brandSlug);
 
   if (error) throw new Error("Failed to fetch analytics");
 
-  return data.map((c) => ({
-    name: c.name,
-    value: c.view_count.toLocaleString(),
-    barPct: Math.round((c.view_count / totalViews) * 100),
-  }));
+  const catMap = Object.fromEntries(data.map((c) => [c.id, c]));
+
+  function buildPath(id: string): string {
+    const parts: string[] = [];
+    let cur: { id: string; name: string; parent_id: string | null; view_count: number } | undefined = catMap[id];
+    while (cur) {
+      parts.unshift(cur.name);
+      cur = cur.parent_id ? catMap[cur.parent_id] : undefined;
+    }
+    return parts.join(" / ");
+  }
+
+  return data
+    .filter((c) => c.view_count > 0)
+    .sort((a, b) => b.view_count - a.view_count)
+    .slice(0, 5)
+    .map((c) => ({
+      name: buildPath(c.id),
+      value: c.view_count.toLocaleString(),
+      barPct: Math.round((c.view_count / totalViews) * 100),
+    }));
 }
 
 export async function getTopProductSales(brandSlug: string, unitsSold: number): Promise<RankedRow[]> {

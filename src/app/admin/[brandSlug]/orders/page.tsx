@@ -1,4 +1,4 @@
-import { getOrders, saveFulfillment, undoFulfillment } from "@/lib/admin/orders";
+import { getOrders } from "@/lib/admin/orders";
 import { getBrandBySlug } from "@/lib/brand";
 import OrdersTable from "./orders-table";
 
@@ -14,16 +14,6 @@ export default async function OrdersPage({
 
   const orders = await getOrders(brandSlug);
 
-  async function save(orderId: string, carrier: string, trackingNumber: string) {
-    "use server";
-    return saveFulfillment(orderId, carrier, trackingNumber);
-  }
-
-  async function undo(orderId: string) {
-    "use server";
-    return undoFulfillment(orderId);
-  }
-
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
       <div>
@@ -35,7 +25,7 @@ export default async function OrdersPage({
         </div>
       </div>
 
-      <OrdersTable initialOrders={orders} accent={accent} saveFulfillment={save} undoFulfillment={undo} />
+      <OrdersTable initialOrders={orders} accent={accent} />
     </div>
   );
 }

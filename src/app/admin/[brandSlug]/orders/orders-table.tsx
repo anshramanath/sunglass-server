@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { formatPrice } from "@/lib/utils";
+import { saveFulfillment, undoFulfillment } from "@/lib/admin/orders";
 import type { Order } from "@/lib/types";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -30,13 +31,9 @@ function displayId(id: string) {
 export default function OrdersTable({
   initialOrders,
   accent,
-  saveFulfillment,
-  undoFulfillment,
 }: {
   initialOrders: Order[];
   accent: string;
-  saveFulfillment: (orderId: string, carrier: string, trackingNumber: string) => Promise<void>;
-  undoFulfillment: (orderId: string) => Promise<void>;
 }) {
   const [filter, setFilter] = useState("all");
   const [expanded, setExpanded] = useState<string | null>(null);
