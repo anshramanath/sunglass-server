@@ -114,6 +114,7 @@ export function ProductForm({
   );
 
   const [saving, setSaving] = useState(false);
+  const [navigating, setNavigating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [catDropdownOpen, setCatDropdownOpen] = useState(false);
@@ -336,12 +337,12 @@ export function ProductForm({
 
   return (
     <div>
-      <NavProgress active={saving || uploading} accent={accent} />
+      <NavProgress active={saving || uploading || navigating} accent={accent} />
 
       {/* Top nav row */}
       <div style={{ marginBottom: 28 }}>
         <button
-          onClick={() => router.push(`/admin/${brandSlug}/products`)}
+          onClick={() => { setNavigating(true); router.push(`/admin/${brandSlug}/products`); }}
           style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#737373", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}
         >
           <span>←</span>
