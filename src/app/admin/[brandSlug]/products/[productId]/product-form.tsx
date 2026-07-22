@@ -100,6 +100,7 @@ export function ProductForm({
   );
   const [categoryIds, setCategoryIds] = useState<string[]>(product?.categoryIds ?? []);
   const [images, setImages] = useState<FormImage[]>(product?.images ?? []);
+  const [descImages, setDescImages] = useState<{ src: string; name: string }[]>(product?.descriptionImages ?? []);
   const [variations, setVariations] = useState<FormVariation[]>(
     existingVariations.map((v) => ({
       id: v.id,
@@ -119,6 +120,7 @@ export function ProductForm({
   const [attrDropdown, setAttrDropdown] = useState<string | null>(null);
 
   const productImgInput = useRef<HTMLInputElement>(null);
+  const descImgInput = useRef<HTMLInputElement>(null);
   const varImgInputs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const isSimple = variations.length === 0;
@@ -197,7 +199,12 @@ export function ProductForm({
   function setAttrField(varId: string, i: number, field: "name" | "option" | "value", val: string) {
     updateVariation(varId, (v) => ({
       ...v,
-      attrs: v.attrs.map((a, idx) => (idx === i ? { ...a, [field]: val } : a)),
+      attrs: v.attrs.map((a, idx) => {
+        if (idx !== i) return a;
+        const updated = { ...a, [field]: val };
+        if (field === "name" && val === "color" && !updated.value) updated.value = "#000000";
+        return updated;
+      }),
     }));
   }
 
@@ -210,6 +217,8 @@ export function ProductForm({
       const path =
         target === "product"
           ? `${productId}/${timestamp}-${safeName}`
+          : target === "description"
+          ? `description/${timestamp}-${safeName}`
           : `${productId}/variations/${target}/${timestamp}-${safeName}`;
 
       const fd = new FormData();
@@ -222,6 +231,8 @@ export function ProductForm({
 
       if (target === "product") {
         setImages((p) => [...p, { src: url, name: imgName, sortOrder: p.length + 1 }]);
+      } else if (target === "description") {
+        setDescImages((p) => [...p, { src: url, name: imgName }]);
       } else {
         updateVariation(target, (v) => ({
           ...v,
@@ -250,6 +261,7 @@ export function ProductForm({
   async function handleSave() {
     if (!name.trim()) { setError("Product name is required."); return; }
     if (images.length === 0) { setError("At least one product image is required."); return; }
+    if (!isSimple && variations.length < 2) { setError("A variable product must have at least 2 variations."); return; }
     if (isSimple && !sku.trim()) { setError("SKU is required for simple products."); return; }
     if (isSimple && sale) {
       if (!salePrice || dollarsToCents(salePrice) <= 0) { setError("Sale price must be greater than zero."); return; }
@@ -264,10 +276,8 @@ export function ProductForm({
         if (!v.salePrice || dollarsToCents(v.salePrice) <= 0) { setError(`${label}: sale price must be greater than zero.`); return; }
         if (dollarsToCents(v.salePrice) >= dollarsToCents(v.regularPrice)) { setError(`${label}: sale price must be less than regular price.`); return; }
       }
-      const emptyAttr = v.attrs.find((a) => a.name && !a.option.trim());
-      if (emptyAttr) { setError(`${label}: "${emptyAttr.name}" attribute requires a value.`); return; }
-      const missingColorVal = v.attrs.find((a) => a.name === "color" && !a.value);
-      if (missingColorVal) { setError(`${label}: color attribute requires a hex value.`); return; }
+      const badAttr = v.attrs.find((a) => !a.name || !a.option.trim() || (a.name === "color" && !a.value));
+      if (v.attrs.length === 0 || badAttr) { setError(`${label}: attribute row is incomplete.`); return; }
     }
     setSaving(true);
     setError(null);
@@ -287,6 +297,7 @@ export function ProductForm({
         salePriceCents: isSimple ? (dollarsToCents(salePrice) || null) : null,
         categoryIds,
         images,
+        descriptionImages: descImages,
         variations: variations.map((v) => ({
           id: v.id,
           sku: v.sku,
@@ -517,6 +528,37 @@ export function ProductForm({
             accept="image/*"
             style={{ display: "none" }}
             onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, "product"); e.target.value = ""; }}
+          />
+        </div>
+      </div>
+
+      {/* Description images */}
+      <div style={{ marginBottom: 48 }}>
+        <div style={sectionTitle}>Description images</div>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-start" }}>
+          {descImages.map((img, i) => (
+            <div key={i} style={{ width: 88 }}>
+              <div style={{ width: 88, height: 110, background: "#f5f5f5", overflow: "hidden" }}>
+                <img src={img.src} alt={img.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+              </div>
+              <div style={{ marginTop: 4 }}>
+                <span onClick={() => setDescImages((p) => p.filter((_, idx) => idx !== i))} style={{ cursor: "pointer", fontSize: 15, color: "#737373" }}>×</span>
+              </div>
+            </div>
+          ))}
+          <button
+            onClick={() => descImgInput.current?.click()}
+            disabled={uploading}
+            style={{ width: 88, height: 110, border: "1px dashed #d4d4d4", background: "none", cursor: uploading ? "default" : "pointer", fontSize: 22, color: "#a3a3a3", display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            {uploading ? "…" : "+"}
+          </button>
+          <input
+            ref={descImgInput}
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, "description"); e.target.value = ""; }}
           />
         </div>
       </div>

@@ -111,6 +111,7 @@ export type ProductDetailData = {
   salePriceCents: number | null;
   categoryIds: string[];
   images: { src: string; name: string; sortOrder: number }[];
+  descriptionImages: { src: string; name: string }[];
   variations: ProductDetailVariation[];
 };
 

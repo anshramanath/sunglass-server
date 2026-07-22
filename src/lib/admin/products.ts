@@ -102,5 +102,5 @@ export async function getCategoryOptions(brandSlug: string): Promise<CategoryOpt
     }
   }
   const roots = data.filter((c) => !c.parent_id).map((c) => nodeMap.get(c.id)!);
-  return Object.values(collectLeaves(roots)).map((l) => ({ id: l.id, name: l.name }));
+  return Object.values(collectLeaves(roots)).map((l) => ({ id: l.id, name: l.breadcrumbs.join(" / ") }));
 }

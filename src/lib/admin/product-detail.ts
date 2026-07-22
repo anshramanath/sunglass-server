@@ -15,6 +15,7 @@ export async function getProductDetail(brandSlug: string, productId: string): Pr
       id, name, slug, sku, description, summary, featured, sale, min_price_cents, sale_price_cents,
       product_categories(category_id),
       product_images(src, name, sort_order),
+      product_description_images(description_images(src, name)),
       variations(id, sku, regular_price_cents, sale_price_cents, sale, attribute,
         variation_images(src, name, sort_order)
       )
@@ -40,6 +41,8 @@ export async function getProductDetail(brandSlug: string, productId: string): Pr
     images: (data.product_images as { src: string; name: string; sort_order: number }[])
       .sort((a, b) => a.sort_order - b.sort_order)
       .map((img) => ({ src: img.src, name: img.name, sortOrder: img.sort_order })),
+    descriptionImages: (data.product_description_images as { description_images: { src: string; name: string }[] }[])
+      .flatMap((r) => r.description_images),
     variations: (data.variations as any[]).map((v) => ({
       id: v.id,
       sku: v.sku,
@@ -69,6 +72,7 @@ type SaveInput = {
   salePriceCents: number | null;
   categoryIds: string[];
   images: { src: string; name: string; sortOrder: number }[];
+  descriptionImages: { src: string; name: string }[];
   variations: {
     id: string;
     sku: string;
@@ -167,6 +171,21 @@ export async function saveProduct(input: SaveInput): Promise<void> {
     if (error) throw new Error(error.message);
   }
 
+  // Description images: upsert into shared table, replace junction
+  await supabase.from("product_description_images").delete().eq("product_id", productId);
+  for (const img of input.descriptionImages) {
+    const { data: descImg, error: upsertErr } = await supabase
+      .from("description_images")
+      .upsert({ brand_slug: brandSlug, src: img.src, name: img.name }, { onConflict: "brand_slug,src" })
+      .select("id")
+      .single();
+    if (upsertErr) throw new Error(upsertErr.message);
+    const { error: linkErr } = await supabase
+      .from("product_description_images")
+      .insert({ product_id: productId, image_id: descImg.id });
+    if (linkErr) throw new Error(linkErr.message);
+  }
+
   if (isSimple) {
     await supabase.from("variations").delete().eq("product_id", productId);
     return;
@@ -196,7 +215,7 @@ export async function saveProduct(input: SaveInput): Promise<void> {
     };
 
     if (v.id.startsWith("new-")) {
-      const { error } = await supabase.from("variations").insert(varRow);
+      const { error } = await supabase.from("variations").insert({ ...varRow, total_sales: 0 });
       if (error) throw new Error(error.message);
     } else {
       const { error } = await supabase.from("variations").update(varRow).eq("id", v.id);
