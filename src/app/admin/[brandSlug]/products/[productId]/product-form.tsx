@@ -676,7 +676,7 @@ export function ProductForm({
                               value={attr.option}
                               onChange={(e) => setAttrField(v.id, ai, "option", e.target.value)}
                               placeholder="Value"
-                              style={{ ...inputStyle, width: 140, fontSize: 13 }}
+                              style={{ ...inputStyle, width: 200, fontSize: 13 }}
                             />
                             <input
                               type="color"
@@ -690,7 +690,7 @@ export function ProductForm({
                             value={attr.option}
                             onChange={(e) => setAttrField(v.id, ai, "option", e.target.value)}
                             placeholder="Value"
-                            style={{ ...inputStyle, width: 180, fontSize: 13 }}
+                            style={{ ...inputStyle, width: 200, fontSize: 13 }}
                           />
                         )}
                         <span
