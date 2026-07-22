@@ -279,6 +279,11 @@ export function ProductForm({
       const badAttr = v.attrs.find((a) => !a.name || !a.option.trim() || (a.name === "color" && !a.value));
       if (v.attrs.length === 0 || badAttr) { setError(`${label}: attribute row is incomplete.`); return; }
     }
+    if (!isSimple) {
+      const skus = variations.map((v) => v.sku.trim());
+      const dupSku = skus.find((s, i) => skus.indexOf(s) !== i);
+      if (dupSku) { setError(`Duplicate SKU "${dupSku}" across variations.`); return; }
+    }
     setSaving(true);
     setError(null);
     try {

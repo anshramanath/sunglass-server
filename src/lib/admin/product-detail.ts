@@ -110,6 +110,16 @@ export async function saveProduct(input: SaveInput): Promise<void> {
   const { brandSlug, productId, isNew, variations } = input;
   const isSimple = variations.length === 0;
 
+  const { data: slugConflict, error: slugError } = await supabase
+    .from("products")
+    .select("id")
+    .eq("brand_slug", brandSlug)
+    .eq("slug", input.slug)
+    .neq("id", productId)
+    .limit(1);
+  if (slugError) throw new Error("Failed to check slug uniqueness.");
+  if (slugConflict.length) throw new Error("A product with this slug already exists.");
+
   let minPrice: number, maxPrice: number, sale: boolean, salePriceCents: number | null;
   if (isSimple) {
     minPrice = maxPrice = input.regularPriceCents;
